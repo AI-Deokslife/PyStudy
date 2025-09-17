@@ -466,9 +466,19 @@ class TeacherDashboard {
                 </div>
                 
                 <div id="live-submissions" class="bg-gray-700 rounded-lg p-4">
-                    <h3 class="text-lg font-semibold text-white mb-4">실시간 제출 현황</h3>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-white">
+                            <i class="fas fa-users mr-2"></i>실시간 제출 현황
+                        </h3>
+                        <div class="text-sm text-gray-400">
+                            <i class="fas fa-info-circle mr-1"></i>학생 이름을 클릭하면 상세 내용을 볼 수 있습니다
+                        </div>
+                    </div>
                     <div id="submissions-list">
-                        <p class="text-gray-400">활성 세션을 선택하면 실시간 제출 현황을 볼 수 있습니다.</p>
+                        <div class="text-center py-8 bg-gray-800 rounded">
+                            <i class="fas fa-clipboard-list text-3xl text-gray-500 mb-3"></i>
+                            <p class="text-gray-400">활성 세션을 선택하면 실시간 제출 현황을 볼 수 있습니다.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -592,27 +602,175 @@ class TeacherDashboard {
         submissionsList.innerHTML = `
             <div class="space-y-3">
                 ${submissions.map(submission => `
-                    <div class="bg-gray-800 p-3 rounded border-l-4 ${this.getSubmissionBorderColor(submission.status)}">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <div class="flex items-center mb-1">
-                                    <span class="font-semibold text-white">${submission.student_name}</span>
-                                    <span class="ml-2 px-2 py-1 ${this.getSubmissionBadgeColor(submission.status)} text-xs rounded">
-                                        ${this.getSubmissionStatusText(submission.status)}
-                                    </span>
-                                    <span class="ml-2 text-gray-400 text-sm">
-                                        ${new Date(submission.submitted_at).toLocaleTimeString('ko-KR')}
-                                    </span>
-                                </div>
-                                ${submission.output ? `<p class="text-gray-300 text-sm">출력: ${submission.output}</p>` : ''}
-                                ${submission.error_message ? `<p class="text-red-400 text-sm">오류: ${submission.error_message}</p>` : ''}
-                                ${submission.execution_time ? `<p class="text-gray-400 text-sm">실행시간: ${submission.execution_time.toFixed(2)}ms</p>` : ''}
+                    <div class="bg-gray-800 p-4 rounded border-l-4 ${this.getSubmissionBorderColor(submission.status)}">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center">
+                                <button onclick="teacherDashboard.showSubmissionDetail(${JSON.stringify(submission).replace(/"/g, '&quot;')})" 
+                                        class="font-semibold text-white hover:text-cyan-400 cursor-pointer transition-colors">
+                                    ${submission.student_name}
+                                </button>
+                                <span class="ml-2 text-gray-500 text-sm">(${submission.student_username})</span>
+                                <span class="ml-2 px-2 py-1 ${this.getSubmissionBadgeColor(submission.status)} text-xs rounded">
+                                    ${this.getSubmissionStatusText(submission.status)}
+                                </span>
+                                <span class="ml-2 text-gray-400 text-sm">
+                                    ${new Date(submission.submitted_at).toLocaleTimeString('ko-KR')}
+                                </span>
                             </div>
+                        </div>
+                        
+                        <!-- 제출된 코드 미리보기 -->
+                        <div class="bg-gray-900 p-3 rounded mb-3">
+                            <h4 class="text-gray-400 text-xs mb-2">제출 코드:</h4>
+                            <pre class="text-green-300 font-mono text-sm overflow-x-auto">${this.truncateCode(submission.code)}</pre>
+                        </div>
+                        
+                        <!-- 실행 결과 -->
+                        <div class="grid grid-cols-1 gap-2">
+                            ${submission.output ? `
+                                <div class="bg-gray-700 p-2 rounded">
+                                    <span class="text-gray-400 text-xs">출력:</span>
+                                    <pre class="text-gray-300 text-sm mt-1">${submission.output}</pre>
+                                </div>
+                            ` : ''}
+                            ${submission.error_message ? `
+                                <div class="bg-red-900 p-2 rounded">
+                                    <span class="text-red-300 text-xs">오류:</span>
+                                    <pre class="text-red-200 text-sm mt-1">${submission.error_message}</pre>
+                                </div>
+                            ` : ''}
+                            ${submission.execution_time ? `
+                                <p class="text-gray-400 text-xs">실행시간: ${submission.execution_time.toFixed(2)}ms</p>
+                            ` : ''}
                         </div>
                     </div>
                 `).join('')}
             </div>
         `;
+    }
+    
+    truncateCode(code) {
+        if (!code) return '코드 없음';
+        const lines = code.split('\n');
+        if (lines.length <= 3) {
+            return code;
+        }
+        return lines.slice(0, 3).join('\n') + `\n... (총 ${lines.length}줄, 클릭하여 전체 보기)`;
+    }
+    
+    showSubmissionDetail(submission) {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4';
+        modal.innerHTML = `
+            <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden border border-gray-700">
+                <div class="flex justify-between items-center p-6 border-b border-gray-700">
+                    <div>
+                        <h3 class="text-xl font-bold text-white">${submission.student_name} (${submission.student_username})</h3>
+                        <p class="text-gray-400 text-sm">제출 시간: ${new Date(submission.submitted_at).toLocaleString('ko-KR')}</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="px-3 py-1 ${this.getSubmissionBadgeColor(submission.status)} text-sm rounded">
+                            ${this.getSubmissionStatusText(submission.status)}
+                        </span>
+                        <button onclick="this.parentElement.parentElement.parentElement.parentElement.remove()" 
+                                class="text-gray-400 hover:text-white">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- 제출된 코드 -->
+                        <div>
+                            <h4 class="text-lg font-semibold text-white mb-3">
+                                <i class="fas fa-code mr-2"></i>제출 코드
+                            </h4>
+                            <div class="bg-gray-900 p-4 rounded border border-gray-600">
+                                <pre class="text-green-300 font-mono text-sm whitespace-pre-wrap overflow-x-auto">${submission.code || '코드 없음'}</pre>
+                            </div>
+                        </div>
+                        
+                        <!-- 실행 결과 -->
+                        <div>
+                            <h4 class="text-lg font-semibold text-white mb-3">
+                                <i class="fas fa-terminal mr-2"></i>실행 결과
+                            </h4>
+                            
+                            ${submission.output ? `
+                                <div class="mb-4">
+                                    <h5 class="text-sm font-medium text-gray-300 mb-2">출력:</h5>
+                                    <div class="bg-gray-900 p-3 rounded border border-gray-600">
+                                        <pre class="text-gray-300 text-sm whitespace-pre-wrap">${submission.output}</pre>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            ${submission.error_message ? `
+                                <div class="mb-4">
+                                    <h5 class="text-sm font-medium text-red-300 mb-2">오류:</h5>
+                                    <div class="bg-red-900 p-3 rounded border border-red-700">
+                                        <pre class="text-red-200 text-sm whitespace-pre-wrap">${submission.error_message}</pre>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            ${submission.execution_time ? `
+                                <div class="mb-4">
+                                    <h5 class="text-sm font-medium text-gray-300 mb-2">성능:</h5>
+                                    <div class="bg-gray-900 p-3 rounded border border-gray-600">
+                                        <p class="text-gray-300 text-sm">실행시간: ${submission.execution_time.toFixed(2)}ms</p>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            ${!submission.output && !submission.error_message ? `
+                                <div class="bg-gray-900 p-4 rounded border border-gray-600 text-center">
+                                    <p class="text-gray-400">실행 결과가 없습니다.</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <!-- 추가 정보 -->
+                    <div class="mt-6 pt-4 border-t border-gray-700">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div class="bg-gray-700 p-3 rounded">
+                                <span class="text-gray-400">제출 ID:</span>
+                                <span class="text-white ml-2">#${submission.id}</span>
+                            </div>
+                            <div class="bg-gray-700 p-3 rounded">
+                                <span class="text-gray-400">상태:</span>
+                                <span class="text-white ml-2">${this.getSubmissionStatusText(submission.status)}</span>
+                            </div>
+                            <div class="bg-gray-700 p-3 rounded">
+                                <span class="text-gray-400">코드 길이:</span>
+                                <span class="text-white ml-2">${submission.code ? submission.code.length : 0}자</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // ESC 키로 닫기
+        const handleKeyPress = (e) => {
+            if (e.key === 'Escape') {
+                modal.remove();
+                document.removeEventListener('keydown', handleKeyPress);
+            }
+        };
+        document.addEventListener('keydown', handleKeyPress);
+        
+        // 배경 클릭으로 닫기
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+                document.removeEventListener('keydown', handleKeyPress);
+            }
+        });
     }
     
     getSubmissionBorderColor(status) {

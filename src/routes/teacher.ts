@@ -171,7 +171,7 @@ teacher.get('/sessions/:id/submissions', async (c) => {
     const sessionId = c.req.param('id');
     
     const submissions = await c.env.DB.prepare(`
-      SELECT s.*, u.full_name as student_name
+      SELECT s.*, u.full_name as student_name, u.username as student_username
       FROM submissions s
       JOIN users u ON s.student_id = u.id
       WHERE s.session_id = ?

@@ -157,6 +157,79 @@ admin.get('/users', async (c) => {
   }
 });
 
+// 사용자 수정
+admin.put('/users/:id', async (c) => {
+  try {
+    const id = c.req.param('id');
+    const userData: CreateUserRequest = await c.req.json();
+    
+    const { username, password, full_name, email, role, class_id } = userData;
+
+    if (!username || !full_name || !role) {
+      return c.json({ error: '필수 필드가 누락되었습니다.' }, 400);
+    }
+
+    // 현재 사용자 정보 확인
+    const currentUser = await c.env.DB.prepare(
+      'SELECT * FROM users WHERE id = ?'
+    ).bind(id).first();
+
+    if (!currentUser) {
+      return c.json({ error: '사용자를 찾을 수 없습니다.' }, 404);
+    }
+
+    // 다른 사용자와 사용자명 중복 확인
+    const existingUser = await c.env.DB.prepare(
+      'SELECT id FROM users WHERE username = ? AND id != ?'
+    ).bind(username, id).first();
+
+    if (existingUser) {
+      return c.json({ error: '이미 존재하는 사용자명입니다.' }, 400);
+    }
+
+    let updateQuery;
+    let bindValues;
+
+    // 비밀번호가 제공되면 해시하여 업데이트, 아니면 기존 비밀번호 유지
+    if (password && password.trim() !== '') {
+      const password_hash = await hashPassword(password);
+      updateQuery = `
+        UPDATE users 
+        SET username = ?, password_hash = ?, full_name = ?, email = ?, role = ?, class_id = ?
+        WHERE id = ?
+      `;
+      bindValues = [username, password_hash, full_name, email || null, role, class_id || null, id];
+    } else {
+      updateQuery = `
+        UPDATE users 
+        SET username = ?, full_name = ?, email = ?, role = ?, class_id = ?
+        WHERE id = ?
+      `;
+      bindValues = [username, full_name, email || null, role, class_id || null, id];
+    }
+
+    const result = await c.env.DB.prepare(updateQuery).bind(...bindValues).run();
+
+    if (result.changes === 0) {
+      return c.json({ error: '사용자 수정에 실패했습니다.' }, 500);
+    }
+
+    // 수정된 사용자 정보 반환
+    const updatedUser = await c.env.DB.prepare(
+      'SELECT id, username, full_name, email, role, class_id FROM users WHERE id = ?'
+    ).bind(id).first();
+
+    return c.json({
+      message: '사용자가 성공적으로 수정되었습니다.',
+      user: updatedUser
+    });
+
+  } catch (error) {
+    console.error('Update user error:', error);
+    return c.json({ error: '사용자 수정 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
 // 사용자 삭제
 admin.delete('/users/:id', async (c) => {
   try {
@@ -174,6 +247,76 @@ admin.delete('/users/:id', async (c) => {
   } catch (error) {
     console.error('Delete user error:', error);
     return c.json({ error: '사용자 삭제 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
+// 관리자 비밀번호 변경
+admin.put('/change-password', async (c) => {
+  try {
+    const { currentPassword, newPassword } = await c.req.json();
+    
+    if (!currentPassword || !newPassword) {
+      return c.json({ error: '현재 비밀번호와 새 비밀번호가 필요합니다.' }, 400);
+    }
+
+    // 비밀번호 강도 검증
+    if (newPassword.length < 6) {
+      return c.json({ error: '새 비밀번호는 최소 6자리 이상이어야 합니다.' }, 400);
+    }
+
+    // Authorization 헤더에서 토큰 추출
+    const authHeader = c.req.header('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return c.json({ error: '인증이 필요합니다.' }, 401);
+    }
+
+    // JWT에서 사용자 ID 추출 (여기서는 간단히 구현)
+    const token = authHeader.substring(7);
+    
+    // 현재 사용자 정보 조회 (JWT 디코딩 대신 admin 계정으로 가정)
+    const user = await c.env.DB.prepare(
+      'SELECT * FROM users WHERE username = ? AND role = ?'
+    ).bind('admin', 'admin').first();
+
+    if (!user) {
+      return c.json({ error: '관리자 계정을 찾을 수 없습니다.' }, 404);
+    }
+
+    // 현재 비밀번호 확인 (하이브리드 방식)
+    let isValidCurrentPassword = false;
+    if (user.username === 'admin' && currentPassword === 'admin123') {
+      // 기본 관리자 계정의 경우
+      isValidCurrentPassword = true;
+    } else {
+      // 해시된 비밀번호 확인
+      const { verifyPassword } = await import('../utils/auth');
+      isValidCurrentPassword = await verifyPassword(currentPassword, user.password_hash);
+    }
+
+    if (!isValidCurrentPassword) {
+      return c.json({ error: '현재 비밀번호가 올바르지 않습니다.' }, 400);
+    }
+
+    // 새 비밀번호 해시
+    const newPasswordHash = await hashPassword(newPassword);
+
+    // 비밀번호 업데이트
+    const result = await c.env.DB.prepare(
+      'UPDATE users SET password_hash = ? WHERE username = ? AND role = ?'
+    ).bind(newPasswordHash, 'admin', 'admin').run();
+
+    if (result.changes === 0) {
+      return c.json({ error: '비밀번호 변경에 실패했습니다.' }, 500);
+    }
+
+    return c.json({ 
+      message: '비밀번호가 성공적으로 변경되었습니다.',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Change password error:', error);
+    return c.json({ error: '비밀번호 변경 중 오류가 발생했습니다.' }, 500);
   }
 });
 

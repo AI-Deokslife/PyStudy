@@ -22,17 +22,26 @@ class AdminDashboard {
     renderHeader() {
         const app = document.getElementById('app');
         app.innerHTML = `
-            <header class="bg-gray-800 shadow-lg">
+            <!-- 모바일 메뉴 토글 버튼 -->
+            <button id="mobile-menu-toggle" class="md:hidden fixed top-4 left-4 z-50 bg-gray-700 hover:bg-gray-600 p-2 rounded-lg">
+                <i class="fas fa-bars text-white"></i>
+            </button>
+            
+            <!-- 모바일 오버레이 -->
+            <div id="mobile-overlay" class="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30 hidden"></div>
+            
+            <header class="bg-gray-800 shadow-lg sticky top-0 z-40">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between items-center h-16">
                         <div class="flex items-center">
-                            <i class="fas fa-user-shield text-2xl text-red-400 mr-3"></i>
-                            <h1 class="text-xl font-semibold text-white">관리자 대시보드</h1>
+                            <div class="md:hidden w-8"></div> <!-- 모바일 메뉴 버튼 공간 확보 -->
+                            <i class="fas fa-user-shield text-xl md:text-2xl text-red-400 mr-2 md:mr-3"></i>
+                            <h1 class="text-lg md:text-xl font-semibold text-white">관리자 대시보드</h1>
                         </div>
-                        <div class="flex items-center space-x-4">
-                            <span class="text-gray-300">${this.user.full_name}</span>
-                            <button onclick="adminDashboard.logout()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white">
-                                <i class="fas fa-sign-out-alt mr-2"></i>로그아웃
+                        <div class="flex items-center space-x-2 md:space-x-4">
+                            <span class="text-gray-300 text-sm md:text-base hidden sm:inline">${this.user.full_name}</span>
+                            <button onclick="adminDashboard.logout()" class="bg-red-600 hover:bg-red-700 px-2 md:px-4 py-2 rounded text-white text-sm md:text-base">
+                                <i class="fas fa-sign-out-alt mr-1 md:mr-2"></i><span class="hidden sm:inline">로그아웃</span>
                             </button>
                         </div>
                     </div>
@@ -40,10 +49,17 @@ class AdminDashboard {
             </header>
             
             <div class="flex min-h-screen bg-gray-900">
-                <nav id="sidebar" class="w-64 bg-gray-800 shadow-lg">
+                <!-- 데스크톱 사이드바 -->
+                <nav id="sidebar" class="hidden md:block w-64 bg-gray-800 shadow-lg">
                     <!-- 네비게이션 메뉴 -->
                 </nav>
-                <main id="main-content" class="flex-1 p-6">
+                
+                <!-- 모바일 사이드바 -->
+                <nav id="mobile-sidebar" class="md:hidden fixed left-0 top-0 h-full w-64 bg-gray-800 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out z-40">
+                    <!-- 네비게이션 메뉴 (모바일) -->
+                </nav>
+                
+                <main id="main-content" class="flex-1 p-4 md:p-6 w-full md:w-auto">
                     <!-- 메인 콘텐츠 -->
                 </main>
             </div>
@@ -51,47 +67,110 @@ class AdminDashboard {
     }
     
     renderNavigation() {
-        const sidebar = document.getElementById('sidebar');
-        sidebar.innerHTML = `
-            <div class="p-6">
+        const navigationHTML = `
+            <div class="p-4 md:p-6">
                 <ul class="space-y-2">
                     <li>
-                        <button onclick="adminDashboard.showUserManagement()" 
+                        <button onclick="adminDashboard.showUserManagement(); adminDashboard.closeMobileMenu();" 
                                 class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
                             <i class="fas fa-users mr-3"></i>사용자 관리
                         </button>
                     </li>
                     <li>
-                        <button onclick="adminDashboard.showBulkUserCreate()" 
+                        <button onclick="adminDashboard.showBulkUserCreate(); adminDashboard.closeMobileMenu();" 
                                 class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
                             <i class="fas fa-file-excel mr-3"></i>엑셀로 계정 생성
                         </button>
                     </li>
                     <li>
-                        <button onclick="adminDashboard.showSystemStats()" 
+                        <button onclick="adminDashboard.showSystemStats(); adminDashboard.closeMobileMenu();" 
                                 class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
                             <i class="fas fa-chart-bar mr-3"></i>시스템 통계
+                        </button>
+                    </li>
+                    <li class="border-t border-gray-600 pt-2 mt-2">
+                        <button onclick="adminDashboard.showChangePassword(); adminDashboard.closeMobileMenu();" 
+                                class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
+                            <i class="fas fa-key mr-3"></i>비밀번호 변경
                         </button>
                     </li>
                 </ul>
             </div>
         `;
+        
+        // 데스크톱 사이드바
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) {
+            sidebar.innerHTML = navigationHTML;
+        }
+        
+        // 모바일 사이드바
+        const mobileSidebar = document.getElementById('mobile-sidebar');
+        if (mobileSidebar) {
+            mobileSidebar.innerHTML = `
+                <div class="p-4 border-b border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-white">메뉴</h2>
+                        <button onclick="adminDashboard.closeMobileMenu()" class="text-gray-400 hover:text-white">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                ${navigationHTML}
+            `;
+        }
+        
+        // 모바일 메뉴 이벤트 리스너
+        this.setupMobileMenu();
+    }
+    
+    setupMobileMenu() {
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+        const mobileOverlay = document.getElementById('mobile-overlay');
+        
+        if (mobileMenuToggle) {
+            mobileMenuToggle.addEventListener('click', () => this.toggleMobileMenu());
+        }
+        
+        if (mobileOverlay) {
+            mobileOverlay.addEventListener('click', () => this.closeMobileMenu());
+        }
+    }
+    
+    toggleMobileMenu() {
+        const mobileSidebar = document.getElementById('mobile-sidebar');
+        const mobileOverlay = document.getElementById('mobile-overlay');
+        
+        if (mobileSidebar && mobileOverlay) {
+            mobileSidebar.classList.toggle('-translate-x-full');
+            mobileOverlay.classList.toggle('hidden');
+        }
+    }
+    
+    closeMobileMenu() {
+        const mobileSidebar = document.getElementById('mobile-sidebar');
+        const mobileOverlay = document.getElementById('mobile-overlay');
+        
+        if (mobileSidebar && mobileOverlay) {
+            mobileSidebar.classList.add('-translate-x-full');
+            mobileOverlay.classList.add('hidden');
+        }
     }
     
     async showUserManagement() {
         const mainContent = document.getElementById('main-content');
         mainContent.innerHTML = `
-            <div class="bg-gray-800 rounded-lg shadow-xl p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-white">사용자 관리</h2>
+            <div class="bg-gray-800 rounded-lg shadow-xl p-4 md:p-6">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                    <h2 class="text-xl md:text-2xl font-bold text-white">사용자 관리</h2>
                     <button onclick="adminDashboard.showCreateUserForm()" 
-                            class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white">
+                            class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white text-sm md:text-base w-full sm:w-auto">
                         <i class="fas fa-plus mr-2"></i>사용자 추가
                     </button>
                 </div>
                 
-                <div id="users-table" class="overflow-x-auto">
-                    <div class="text-center py-4">
+                <div id="users-table">
+                    <div class="text-center py-8">
                         <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
                         <p class="text-gray-400 mt-2">사용자 목록을 불러오는 중...</p>
                     </div>
@@ -140,42 +219,98 @@ class AdminDashboard {
             return;
         }
         
+        // 데스크톱 테이블 (md 이상에서 표시)
         usersTable.innerHTML = `
-            <table class="min-w-full bg-gray-700 rounded-lg overflow-hidden">
-                <thead class="bg-gray-600">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">사용자명</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">이름</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">이메일</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">역할</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">클래스</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">가입일</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">작업</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-600">
-                    ${users.map(user => `
-                        <tr class="hover:bg-gray-600">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-white">${user.username}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-white">${user.full_name}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${user.email || '-'}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${this.getRoleBadgeColor(user.role)}">
-                                    ${this.getRoleText(user.role)}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${user.class_id || '-'}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${new Date(user.created_at).toLocaleDateString('ko-KR')}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+            <!-- 데스크톱 테이블 -->
+            <div class="hidden md:block overflow-x-auto">
+                <table class="min-w-full bg-gray-700 rounded-lg overflow-hidden">
+                    <thead class="bg-gray-600">
+                        <tr>
+                            <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">ID</th>
+                            <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">사용자 ID</th>
+                            <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">이름</th>
+                            <th class="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">이메일</th>
+                            <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">역할</th>
+                            <th class="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">클래스</th>
+                            <th class="hidden xl:table-cell px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">가입일</th>
+                            <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">작업</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-600">
+                        ${users.map(user => `
+                            <tr class="hover:bg-gray-600">
+                                <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-blue-300 font-mono">#${user.id}</td>
+                                <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-white">${user.username}</td>
+                                <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-white">${user.full_name}</td>
+                                <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-300">${user.email || '-'}</td>
+                                <td class="px-4 lg:px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${this.getRoleBadgeColor(user.role)}">
+                                        ${this.getRoleText(user.role)}
+                                    </span>
+                                </td>
+                                <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-300">${user.class_id || '-'}</td>
+                                <td class="hidden xl:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-300">${new Date(user.created_at).toLocaleDateString('ko-KR')}</td>
+                                <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                    <div class="flex space-x-2">
+                                        <button onclick="adminDashboard.showEditUserForm(${user.id})" 
+                                                class="text-blue-400 hover:text-blue-300" title="수정">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button onclick="adminDashboard.deleteUser(${user.id})" 
+                                                class="text-red-400 hover:text-red-300" title="삭제">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 모바일 카드 뷰 (md 미만에서 표시) -->
+            <div class="md:hidden space-y-4">
+                ${users.map(user => `
+                    <div class="bg-gray-700 rounded-lg p-4 border border-gray-600">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-blue-300 font-mono text-sm">#${user.id}</span>
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full ${this.getRoleBadgeColor(user.role)}">
+                                        ${this.getRoleText(user.role)}
+                                    </span>
+                                </div>
+                                <h3 class="text-white font-medium text-lg">${user.full_name}</h3>
+                                <p class="text-gray-300 text-sm">@${user.username}</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="adminDashboard.showEditUserForm(${user.id})" 
+                                        class="p-2 text-blue-400 hover:text-blue-300 hover:bg-gray-600 rounded" title="수정">
+                                    <i class="fas fa-edit"></i>
+                                </button>
                                 <button onclick="adminDashboard.deleteUser(${user.id})" 
-                                        class="text-red-400 hover:text-red-300">
+                                        class="p-2 text-red-400 hover:text-red-300 hover:bg-gray-600 rounded" title="삭제">
                                     <i class="fas fa-trash"></i>
                                 </button>
-                            </td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            ${user.email ? `<div class="flex items-center text-gray-300">
+                                <i class="fas fa-envelope mr-2 w-4"></i>
+                                <span>${user.email}</span>
+                            </div>` : ''}
+                            ${user.class_id ? `<div class="flex items-center text-gray-300">
+                                <i class="fas fa-graduation-cap mr-2 w-4"></i>
+                                <span>클래스: ${user.class_id}</span>
+                            </div>` : ''}
+                            <div class="flex items-center text-gray-300">
+                                <i class="fas fa-calendar mr-2 w-4"></i>
+                                <span>가입일: ${new Date(user.created_at).toLocaleDateString('ko-KR')}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
         `;
     }
     
@@ -212,7 +347,7 @@ class AdminDashboard {
                 <form id="create-user-form" class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">사용자명</label>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">사용자 ID</label>
                             <input type="text" name="username" required 
                                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
                         </div>
@@ -325,7 +460,7 @@ class AdminDashboard {
                     </h3>
                     <p class="text-blue-200 mb-2">CSV 형식의 파일을 업로드해주세요. 첫 번째 줄은 헤더로 다음 컬럼들을 포함해야 합니다:</p>
                     <ul class="text-blue-200 ml-4">
-                        <li>• <strong>username</strong>: 사용자명 (필수)</li>
+                        <li>• <strong>username</strong>: 사용자 ID (필수)</li>
                         <li>• <strong>password</strong>: 비밀번호 (필수)</li>
                         <li>• <strong>full_name</strong>: 이름 (필수)</li>
                         <li>• <strong>email</strong>: 이메일 (선택)</li>
@@ -477,6 +612,153 @@ class AdminDashboard {
         }
     }
     
+    async showEditUserForm(userId) {
+        try {
+            // 기존 사용자 정보 가져오기
+            const response = await fetch('/api/admin/users', {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error);
+            }
+            
+            const user = data.users.find(u => u.id === userId);
+            if (!user) {
+                alert('사용자를 찾을 수 없습니다.');
+                return;
+            }
+            
+            const mainContent = document.getElementById('main-content');
+            mainContent.innerHTML = `
+                <div class="bg-gray-800 rounded-lg shadow-xl p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-white">사용자 수정 (ID: #${user.id})</h2>
+                        <button onclick="adminDashboard.showUserManagement()" 
+                                class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded text-white">
+                            <i class="fas fa-arrow-left mr-2"></i>뒤로가기
+                        </button>
+                    </div>
+                    
+                    <form id="edit-user-form" class="space-y-6">
+                        <input type="hidden" name="user_id" value="${user.id}">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">사용자 ID</label>
+                                <input type="text" name="username" value="${user.username}" required 
+                                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">비밀번호 (변경시만 입력)</label>
+                                <input type="password" name="password" placeholder="비밀번호를 변경하려면 입력하세요"
+                                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">이름</label>
+                                <input type="text" name="full_name" value="${user.full_name}" required 
+                                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">이메일</label>
+                                <input type="email" name="email" value="${user.email || ''}" 
+                                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">역할</label>
+                                <select name="role" required class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                                    <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>관리자</option>
+                                    <option value="teacher" ${user.role === 'teacher' ? 'selected' : ''}>교사</option>
+                                    <option value="student" ${user.role === 'student' ? 'selected' : ''}>학생</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">클래스 ID (학생만)</label>
+                                <input type="text" name="class_id" value="${user.class_id || ''}" 
+                                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-4">
+                            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">
+                                <i class="fas fa-save mr-2"></i>수정 저장
+                            </button>
+                            <button type="button" onclick="adminDashboard.showUserManagement()" 
+                                    class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded">
+                                <i class="fas fa-times mr-2"></i>취소
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div id="edit-result" class="mt-4 hidden"></div>
+                </div>
+            `;
+            
+            document.getElementById('edit-user-form').addEventListener('submit', this.handleEditUser.bind(this));
+            
+        } catch (error) {
+            alert('사용자 정보를 불러오는데 실패했습니다.');
+        }
+    }
+    
+    async handleEditUser(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const userData = Object.fromEntries(formData.entries());
+        const userId = userData.user_id;
+        
+        // user_id는 API 요청에서 제외
+        delete userData.user_id;
+        
+        try {
+            const response = await fetch(`/api/admin/users/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify(userData)
+            });
+            
+            const data = await response.json();
+            
+            const resultDiv = document.getElementById('edit-result');
+            resultDiv.classList.remove('hidden');
+            
+            if (response.ok) {
+                resultDiv.innerHTML = `
+                    <div class="p-3 bg-green-900 border border-green-700 rounded-md text-green-300">
+                        <i class="fas fa-check-circle mr-2"></i>사용자 정보가 성공적으로 수정되었습니다.
+                    </div>
+                `;
+                setTimeout(() => this.showUserManagement(), 2000);
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="p-3 bg-red-900 border border-red-700 rounded-md text-red-300">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>${data.error}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            const resultDiv = document.getElementById('edit-result');
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerHTML = `
+                <div class="p-3 bg-red-900 border border-red-700 rounded-md text-red-300">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>사용자 수정 중 오류가 발생했습니다.
+                </div>
+            `;
+        }
+    }
+
     async deleteUser(userId) {
         if (!confirm('정말로 이 사용자를 삭제하시겠습니까?')) {
             return;
@@ -505,6 +787,231 @@ class AdminDashboard {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/';
+    }
+    
+    // 비밀번호 변경 화면 표시
+    showChangePassword() {
+        const mainContent = document.getElementById('main-content');
+        mainContent.innerHTML = `
+            <div class="bg-gray-800 rounded-lg shadow-xl p-4 md:p-6 max-w-2xl mx-auto">
+                <div class="mb-6">
+                    <h2 class="text-xl md:text-2xl font-bold text-white mb-2">
+                        <i class="fas fa-key mr-2 text-yellow-400"></i>비밀번호 변경
+                    </h2>
+                    <p class="text-gray-400 text-sm">보안을 위해 정기적으로 비밀번호를 변경하는 것을 권장합니다.</p>
+                </div>
+
+                <form id="change-password-form" class="space-y-6">
+                    <div>
+                        <label for="current-password" class="block text-sm font-medium text-gray-300 mb-2">
+                            <i class="fas fa-lock mr-1"></i>현재 비밀번호
+                        </label>
+                        <input type="password" id="current-password" name="current-password" required 
+                               class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-white"
+                               placeholder="현재 비밀번호를 입력하세요">
+                    </div>
+                    
+                    <div>
+                        <label for="new-password" class="block text-sm font-medium text-gray-300 mb-2">
+                            <i class="fas fa-key mr-1"></i>새 비밀번호
+                        </label>
+                        <input type="password" id="new-password" name="new-password" required 
+                               minlength="6"
+                               class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-white"
+                               placeholder="새 비밀번호를 입력하세요 (최소 6자리)">
+                        <div class="mt-2">
+                            <div id="password-strength" class="text-xs text-gray-400">
+                                <span id="strength-text">비밀번호 강도: </span>
+                                <span id="strength-bar" class="inline-block w-20 h-1 bg-gray-600 rounded ml-2"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="confirm-password" class="block text-sm font-medium text-gray-300 mb-2">
+                            <i class="fas fa-check-circle mr-1"></i>새 비밀번호 확인
+                        </label>
+                        <input type="password" id="confirm-password" name="confirm-password" required 
+                               minlength="6"
+                               class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-white"
+                               placeholder="새 비밀번호를 다시 입력하세요">
+                        <div id="password-match" class="mt-2 text-xs hidden">
+                            <span class="text-red-400"><i class="fas fa-times mr-1"></i>비밀번호가 일치하지 않습니다</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-900 border border-blue-700 p-4 rounded-lg">
+                        <div class="flex items-start">
+                            <i class="fas fa-info-circle text-blue-400 mr-2 mt-0.5"></i>
+                            <div class="text-sm text-blue-200">
+                                <p class="font-semibold mb-1">비밀번호 보안 팁:</p>
+                                <ul class="list-disc list-inside space-y-1 text-xs">
+                                    <li>최소 6자리 이상 사용하세요</li>
+                                    <li>숫자, 영문자, 특수문자를 조합하세요</li>
+                                    <li>개인정보와 관련된 단어는 피하세요</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
+                        <button type="button" onclick="adminDashboard.showUserManagement()" 
+                                class="w-full sm:w-auto px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-md transition duration-300">
+                            <i class="fas fa-times mr-2"></i>취소
+                        </button>
+                        <button type="submit" id="change-password-btn"
+                                class="w-full sm:w-auto px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white font-semibold rounded-md transition duration-300 disabled:bg-gray-500 disabled:cursor-not-allowed">
+                            <i class="fas fa-key mr-2"></i>비밀번호 변경
+                        </button>
+                    </div>
+                </form>
+
+                <div id="change-password-message" class="mt-4 p-3 rounded-md text-sm hidden">
+                </div>
+            </div>
+        `;
+        
+        this.setupPasswordChangeListeners();
+    }
+    
+    setupPasswordChangeListeners() {
+        const form = document.getElementById('change-password-form');
+        const newPasswordInput = document.getElementById('new-password');
+        const confirmPasswordInput = document.getElementById('confirm-password');
+        const passwordMatchDiv = document.getElementById('password-match');
+        
+        // 비밀번호 강도 체크
+        newPasswordInput.addEventListener('input', () => {
+            this.checkPasswordStrength(newPasswordInput.value);
+        });
+        
+        // 비밀번호 일치 체크
+        confirmPasswordInput.addEventListener('input', () => {
+            const newPassword = newPasswordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            if (confirmPassword && newPassword !== confirmPassword) {
+                passwordMatchDiv.classList.remove('hidden');
+                confirmPasswordInput.classList.add('border-red-500');
+            } else {
+                passwordMatchDiv.classList.add('hidden');
+                confirmPasswordInput.classList.remove('border-red-500');
+            }
+        });
+        
+        // 폼 제출
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handlePasswordChange();
+        });
+    }
+    
+    checkPasswordStrength(password) {
+        const strengthText = document.getElementById('strength-text');
+        const strengthBar = document.getElementById('strength-bar');
+        
+        let strength = 0;
+        let color = 'bg-red-500';
+        let text = '매우 약함';
+        
+        if (password.length >= 6) strength += 1;
+        if (password.match(/[a-z]/)) strength += 1;
+        if (password.match(/[A-Z]/)) strength += 1;
+        if (password.match(/[0-9]/)) strength += 1;
+        if (password.match(/[^a-zA-Z0-9]/)) strength += 1;
+        
+        if (strength >= 4) {
+            color = 'bg-green-500';
+            text = '강함';
+        } else if (strength >= 3) {
+            color = 'bg-yellow-500';
+            text = '보통';
+        } else if (strength >= 2) {
+            color = 'bg-orange-500';
+            text = '약함';
+        }
+        
+        strengthText.textContent = `비밀번호 강도: ${text}`;
+        strengthBar.className = `inline-block w-20 h-1 rounded ml-2 ${color}`;
+    }
+    
+    async handlePasswordChange() {
+        const currentPassword = document.getElementById('current-password').value;
+        const newPassword = document.getElementById('new-password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        const messageDiv = document.getElementById('change-password-message');
+        const submitBtn = document.getElementById('change-password-btn');
+        
+        // 유효성 검사
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            this.showPasswordMessage('모든 필드를 입력해주세요.', 'error');
+            return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+            this.showPasswordMessage('새 비밀번호가 일치하지 않습니다.', 'error');
+            return;
+        }
+        
+        if (newPassword.length < 6) {
+            this.showPasswordMessage('새 비밀번호는 최소 6자리 이상이어야 합니다.', 'error');
+            return;
+        }
+        
+        // 로딩 상태
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>변경 중...';
+        
+        try {
+            const response = await fetch('/api/admin/change-password', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify({
+                    currentPassword,
+                    newPassword
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.showPasswordMessage('비밀번호가 성공적으로 변경되었습니다!', 'success');
+                // 폼 초기화
+                document.getElementById('change-password-form').reset();
+                // 3초 후 사용자 관리로 이동
+                setTimeout(() => {
+                    this.showUserManagement();
+                }, 3000);
+            } else {
+                this.showPasswordMessage(data.error || '비밀번호 변경에 실패했습니다.', 'error');
+            }
+        } catch (error) {
+            console.error('Password change error:', error);
+            this.showPasswordMessage('서버 연결에 실패했습니다.', 'error');
+        } finally {
+            // 로딩 상태 해제
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-key mr-2"></i>비밀번호 변경';
+        }
+    }
+    
+    showPasswordMessage(message, type) {
+        const messageDiv = document.getElementById('change-password-message');
+        messageDiv.className = `mt-4 p-3 rounded-md text-sm ${
+            type === 'success' 
+                ? 'bg-green-900 border border-green-700 text-green-300' 
+                : 'bg-red-900 border border-red-700 text-red-300'
+        }`;
+        messageDiv.textContent = message;
+        messageDiv.classList.remove('hidden');
+        
+        // 5초 후 메시지 숨김
+        setTimeout(() => {
+            messageDiv.classList.add('hidden');
+        }, 5000);
     }
 }
 

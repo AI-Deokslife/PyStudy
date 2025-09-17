@@ -35,7 +35,7 @@ app.get('/', (c) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>파이썬 학습 관리 플랫폼</title>
+        <title>파이썬 학습 관리 시스템</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
         <style>
@@ -48,14 +48,18 @@ app.get('/', (c) => {
         <div class="min-h-screen flex items-center justify-center p-4">
             <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md border border-gray-700">
                 <div class="text-center mb-8">
-                    <i class="fas fa-code text-4xl text-cyan-400 mb-4"></i>
-                    <h1 class="text-2xl font-bold text-white mb-2">파이썬 학습 플랫폼</h1>
+                    <div class="flex justify-center mb-4">
+                        <img src="https://page.gensparksite.com/v1/base64_upload/bad96bac7759bb19a45b4ded8370de1f" 
+                             alt="Logo" 
+                             class="w-20 h-20 rounded-full object-cover border-4 border-cyan-400 shadow-lg">
+                    </div>
+                    <h1 class="text-2xl font-bold text-white mb-2">파이썬 학습 관리 시스템</h1>
                     <p class="text-gray-400">은평메디텍고등학교 - 이은덕 선생님</p>
                 </div>
 
                 <form id="login-form" class="space-y-6">
                     <div>
-                        <label for="username" class="block text-sm font-medium text-gray-300 mb-2">사용자명</label>
+                        <label for="username" class="block text-sm font-medium text-gray-300 mb-2">ID</label>
                         <input type="text" id="username" name="username" required 
                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent text-white">
                     </div>
@@ -76,12 +80,7 @@ app.get('/', (c) => {
                 <div id="error-message" class="mt-4 p-3 bg-red-900 border border-red-700 rounded-md text-red-300 text-sm hidden">
                 </div>
 
-                <div class="mt-8 text-center text-gray-400 text-sm">
-                    <p class="mb-2">테스트 계정:</p>
-                    <p>관리자: admin / admin123</p>
-                    <p>교사: teacher1 / teacher123</p>
-                    <p>학생: student1 / student123</p>
-                </div>
+
             </div>
         </div>
 
@@ -158,7 +157,7 @@ app.get('/admin', (c) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>관리자 대시보드 - 파이썬 학습 플랫폼</title>
+        <title>관리자 대시보드 - 파이썬 학습 관리 시스템</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
         <script src="/static/admin.js"></script>
@@ -180,7 +179,7 @@ app.get('/teacher', (c) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>교사 대시보드 - 파이썬 학습 플랫폼</title>
+        <title>교사 대시보드 - 파이썬 학습 관리 시스템</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
         <script src="/static/teacher.js"></script>
@@ -202,7 +201,7 @@ app.get('/student', (c) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>파이썬 학습 환경</title>
+        <title>파이썬 학습 관리 시스템</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <!-- Pyodide (WebAssembly Python) CDN -->
         <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>

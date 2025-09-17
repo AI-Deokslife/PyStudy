@@ -22,8 +22,22 @@ auth.post('/login', async (c) => {
       return c.json({ error: '사용자를 찾을 수 없습니다.' }, 401);
     }
 
-    // 비밀번호 확인 (개발용 단순 비교)
-    if (password !== 'admin123' && password !== 'teacher123' && password !== 'student123') {
+    // 비밀번호 확인 (하이브리드 방식: 테스트 계정은 평문, 새 계정은 해시)
+    let isValidPassword = false;
+    
+    // 테스트 계정들은 평문 비밀번호 확인
+    if (user.username === 'admin' && password === 'admin123') {
+      isValidPassword = true;
+    } else if (user.username === 'teacher1' && password === 'teacher123') {
+      isValidPassword = true;
+    } else if (user.username === 'student1' && password === 'student123') {
+      isValidPassword = true;
+    } else {
+      // 새로 생성된 계정들은 해시 비교
+      isValidPassword = await verifyPassword(password, user.password_hash);
+    }
+    
+    if (!isValidPassword) {
       return c.json({ error: '비밀번호가 잘못되었습니다.' }, 401);
     }
 

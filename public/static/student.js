@@ -28,21 +28,21 @@ class StudentEnvironment {
     renderHeader() {
         const app = document.getElementById('app');
         app.innerHTML = `
-            <header class="bg-gray-800 shadow-lg">
+            <header class="bg-gray-800 shadow-lg sticky top-0 z-40">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between items-center h-16">
                         <div class="flex items-center">
-                            <i class="fas fa-user-graduate text-2xl text-green-400 mr-3"></i>
-                            <h1 class="text-xl font-semibold text-white">파이썬 학습 환경</h1>
+                            <i class="fas fa-user-graduate text-lg md:text-2xl text-green-400 mr-2 md:mr-3"></i>
+                            <h1 class="text-sm md:text-xl font-semibold text-white">파이썬 학습 환경</h1>
                         </div>
-                        <div class="flex items-center space-x-4">
-                            <div id="session-indicator" class="flex items-center">
+                        <div class="flex items-center space-x-2 md:space-x-4">
+                            <div id="session-indicator" class="hidden sm:flex items-center">
                                 <div class="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
-                                <span class="text-gray-400 text-sm">세션 확인 중...</span>
+                                <span class="text-gray-400 text-xs md:text-sm">세션 확인 중...</span>
                             </div>
-                            <span class="text-gray-300">${this.user.full_name} (${this.user.class_id || '클래스 미지정'})</span>
-                            <button onclick="studentEnv.logout()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white">
-                                <i class="fas fa-sign-out-alt mr-2"></i>로그아웃
+                            <span class="text-gray-300 text-xs md:text-sm hidden lg:inline">${this.user.full_name} (${this.user.class_id || '클래스 미지정'})</span>
+                            <button onclick="studentEnv.logout()" class="bg-red-600 hover:bg-red-700 px-2 md:px-4 py-2 rounded text-white text-xs md:text-sm">
+                                <i class="fas fa-sign-out-alt mr-1 md:mr-2"></i><span class="hidden sm:inline">로그아웃</span>
                             </button>
                         </div>
                     </div>
@@ -68,17 +68,17 @@ class StudentEnvironment {
             </div>
 
             <!-- 활성 문제 알림 -->
-            <div id="problem-notification" class="hidden fixed top-20 right-4 bg-blue-900 border border-blue-700 p-4 rounded-lg shadow-xl z-40 max-w-sm">
+            <div id="problem-notification" class="hidden fixed top-16 md:top-20 left-2 right-2 md:left-auto md:right-4 bg-blue-900 border border-blue-700 p-3 md:p-4 rounded-lg shadow-xl z-40 max-w-sm md:max-w-md">
                 <div class="flex items-start">
-                    <i class="fas fa-exclamation-circle text-blue-400 text-xl mr-3 mt-1"></i>
+                    <i class="fas fa-exclamation-circle text-blue-400 text-lg md:text-xl mr-2 md:mr-3 mt-1"></i>
                     <div class="flex-1">
-                        <h4 class="text-blue-300 font-semibold">새로운 문제가 출제되었습니다!</h4>
-                        <p id="problem-title" class="text-blue-200 text-sm mt-1"></p>
-                        <div class="mt-3 space-x-2">
-                            <button onclick="studentEnv.loadCurrentProblem()" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-white text-sm">
+                        <h4 class="text-blue-300 font-semibold text-sm md:text-base">새로운 문제가 출제되었습니다!</h4>
+                        <p id="problem-title" class="text-blue-200 text-xs md:text-sm mt-1"></p>
+                        <div class="mt-3 flex flex-col sm:flex-row gap-2 sm:space-x-2">
+                            <button onclick="studentEnv.loadCurrentProblem()" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-white text-xs md:text-sm">
                                 문제 보기
                             </button>
-                            <button onclick="studentEnv.dismissNotification()" class="bg-gray-600 hover:bg-gray-700 px-3 py-1 rounded text-white text-sm">
+                            <button onclick="studentEnv.dismissNotification()" class="bg-gray-600 hover:bg-gray-700 px-3 py-1 rounded text-white text-xs md:text-sm">
                                 나중에
                             </button>
                         </div>
@@ -86,66 +86,84 @@ class StudentEnvironment {
                 </div>
             </div>
 
-            <div class="container mx-auto p-4 max-w-7xl">
+            <div class="container mx-auto p-2 md:p-4 max-w-7xl">
                 <!-- 탭 네비게이션 -->
-                <div class="flex mb-6 bg-gray-800 rounded-lg p-2">
+                <div class="flex mb-4 md:mb-6 bg-gray-800 rounded-lg p-1 md:p-2 overflow-x-auto">
                     <button id="tab-practice" onclick="studentEnv.switchTab('practice')" 
-                            class="flex-1 py-2 px-4 text-center rounded bg-cyan-600 text-white font-semibold">
-                        <i class="fas fa-code mr-2"></i>자유 연습
+                            class="flex-1 py-2 px-2 md:px-4 text-center rounded bg-cyan-600 text-white font-semibold whitespace-nowrap text-xs md:text-sm">
+                        <i class="fas fa-code mr-1 md:mr-2"></i><span class="hidden sm:inline">자유 </span>연습
                     </button>
                     <button id="tab-problem" onclick="studentEnv.switchTab('problem')" 
-                            class="flex-1 py-2 px-4 text-center rounded text-gray-300 hover:bg-gray-700">
-                        <i class="fas fa-tasks mr-2"></i>출제된 문제
+                            class="flex-1 py-2 px-2 md:px-4 text-center rounded text-gray-300 hover:bg-gray-700 whitespace-nowrap text-xs md:text-sm">
+                        <i class="fas fa-tasks mr-1 md:mr-2"></i><span class="hidden sm:inline">출제된 </span>문제
                     </button>
                     <button id="tab-history" onclick="studentEnv.switchTab('history')" 
-                            class="flex-1 py-2 px-4 text-center rounded text-gray-300 hover:bg-gray-700">
-                        <i class="fas fa-history mr-2"></i>제출 기록
+                            class="flex-1 py-2 px-2 md:px-4 text-center rounded text-gray-300 hover:bg-gray-700 whitespace-nowrap text-xs md:text-sm">
+                        <i class="fas fa-history mr-1 md:mr-2"></i><span class="hidden sm:inline">제출 </span>기록
                     </button>
                 </div>
 
                 <!-- 자유 연습 탭 -->
                 <div id="practice-tab" class="tab-content">
-                    <div class="flex flex-col lg:flex-row gap-6 min-h-[75vh]">
-                        <!-- 왼쪽 섹션: 코드 에디터 -->
-                        <div class="lg:w-1/2 flex flex-col bg-gray-800 rounded-lg shadow-lg">
+                    <div class="flex flex-col gap-4 md:gap-6 min-h-[calc(100vh-200px)]">
+                        <!-- 코드 에디터 섹션 -->
+                        <div class="flex flex-col bg-gray-800 rounded-lg shadow-lg">
                             <div class="flex-1 flex flex-col">
-                                <div class="p-3 bg-gray-700 rounded-t-lg border-b border-gray-600">
-                                    <h2 class="text-lg font-semibold text-white">코딩 영역</h2>
+                                <div class="p-2 md:p-3 bg-gray-700 rounded-t-lg border-b border-gray-600">
+                                    <h2 class="text-base md:text-lg font-semibold text-white">코딩 영역</h2>
                                 </div>
-                                <textarea id="code-editor" class="w-full flex-1 p-4 bg-gray-900 text-green-300 font-mono text-base rounded-b-lg focus:outline-none resize-none" spellcheck="false"></textarea>
+                                <textarea id="code-editor" class="w-full h-48 md:h-64 lg:h-80 p-3 md:p-4 bg-gray-900 text-green-300 font-mono text-sm md:text-base focus:outline-none resize-none" spellcheck="false"></textarea>
                             </div>
-                            <div class="p-3 bg-gray-700 rounded-b-lg border-t border-gray-500 flex flex-col gap-3">
-                                <div class="flex gap-3">
-                                    <button id="run-btn" disabled class="w-1/3 bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-4 rounded-md transition duration-300 disabled:bg-gray-500 disabled:cursor-not-allowed">
+                            <div class="p-2 md:p-3 bg-gray-700 border-t border-gray-500 flex flex-col gap-2 md:gap-3">
+                                <!-- 모바일: 버튼을 2x2 그리드로 배치 -->
+                                <div class="grid grid-cols-2 gap-2 md:hidden">
+                                    <button id="run-btn" disabled class="bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-2 rounded-md transition duration-300 disabled:bg-gray-500 disabled:cursor-not-allowed text-xs">
+                                        <i class="fas fa-play mr-1"></i>실행
+                                    </button>
+                                    <button id="clear-code-btn" class="bg-yellow-600 hover:bg-yellow-700 text-white py-2 px-2 rounded-md transition duration-300 text-xs">
+                                        <i class="fas fa-eraser mr-1"></i>삭제
+                                    </button>
+                                    <button id="save-file-btn" class="bg-green-600 hover:bg-green-700 text-white py-2 px-2 rounded-md transition duration-300 text-xs">
+                                        <i class="fas fa-save mr-1"></i>저장
+                                    </button>
+                                    <button id="load-file-btn" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-2 rounded-md transition duration-300 text-xs">
+                                        <i class="fas fa-folder-open mr-1"></i>불러오기
+                                    </button>
+                                </div>
+                                
+                                <!-- 데스크톱: 기존 레이아웃 유지 -->
+                                <div class="hidden md:flex gap-3">
+                                    <button id="run-btn-desktop" disabled class="w-1/3 bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-4 rounded-md transition duration-300 disabled:bg-gray-500 disabled:cursor-not-allowed">
                                         <i class="fas fa-play mr-2"></i>코드 실행
                                     </button>
-                                    <button id="clear-code-btn" class="w-1/3 bg-yellow-600 hover:bg-yellow-700 text-white py-2 px-4 rounded-md transition duration-300">
+                                    <button id="clear-code-btn-desktop" class="w-1/3 bg-yellow-600 hover:bg-yellow-700 text-white py-2 px-4 rounded-md transition duration-300">
                                         <i class="fas fa-eraser mr-2"></i>코드 삭제
                                     </button>
-                                    <button id="clear-output-btn" class="w-1/3 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition duration-300">
+                                    <button id="clear-output-btn-desktop" class="w-1/3 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition duration-300">
                                         <i class="fas fa-trash mr-2"></i>결과 삭제
                                     </button>
                                 </div>
-                                <div class="flex gap-3">
-                                    <button id="save-file-btn" class="w-1/2 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md transition duration-300">
+                                <div class="hidden md:flex gap-3">
+                                    <button id="save-file-btn-desktop" class="w-1/2 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md transition duration-300">
                                         <i class="fas fa-save mr-2"></i>파일로 저장
                                     </button>
-                                    <button id="load-file-btn" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition duration-300">
+                                    <button id="load-file-btn-desktop" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition duration-300">
                                         <i class="fas fa-folder-open mr-2"></i>파일 불러오기
                                     </button>
                                 </div>
-                                <span id="status-message" class="text-center text-sm text-gray-400 h-4 transition-opacity duration-500 opacity-0"></span>
+                                <span id="status-message" class="text-center text-xs md:text-sm text-gray-400 h-4 transition-opacity duration-500 opacity-0"></span>
                             </div>
                         </div>
 
-                        <!-- 오른쪽 섹션: 입력 및 결과 -->
-                        <div class="lg:w-1/2 flex flex-col">
-                            <div class="flex flex-col bg-gray-800 rounded-lg shadow-lg h-full">
-                                <div class="p-3 bg-gray-700 rounded-t-lg border-b border-gray-600">
-                                    <h2 class="text-lg font-semibold text-white">실행 결과</h2>
-                                </div>
-                                <pre id="output" class="w-full flex-1 p-4 bg-gray-900 text-white font-mono text-base rounded-b-lg overflow-auto whitespace-pre-wrap break-words">결과는 여기에 표시됩니다.</pre>
+                        <!-- 실행 결과 섹션 -->
+                        <div class="flex flex-col bg-gray-800 rounded-lg shadow-lg">
+                            <div class="p-2 md:p-3 bg-gray-700 rounded-t-lg border-b border-gray-600 flex items-center justify-between">
+                                <h2 class="text-base md:text-lg font-semibold text-white">실행 결과</h2>
+                                <button id="clear-output-btn-mobile" class="md:hidden bg-red-600 hover:bg-red-700 text-white py-1 px-2 rounded text-xs">
+                                    <i class="fas fa-trash mr-1"></i>삭제
+                                </button>
                             </div>
+                            <pre id="output" class="w-full h-48 md:h-64 p-3 md:p-4 bg-gray-900 text-white font-mono text-xs md:text-base overflow-auto whitespace-pre-wrap break-words">결과는 여기에 표시됩니다.</pre>
                         </div>
                     </div>
                 </div>
@@ -195,20 +213,44 @@ class StudentEnvironment {
     }
     
     setupEventListeners() {
-        // 기본 버튼 이벤트
-        document.getElementById('run-btn').addEventListener('click', () => this.runPythonCode());
-        document.getElementById('clear-output-btn').addEventListener('click', () => this.clearOutput());
-        document.getElementById('clear-code-btn').addEventListener('click', () => this.clearCode());
-        document.getElementById('save-file-btn').addEventListener('click', () => this.showSaveModal());
-        document.getElementById('load-file-btn').addEventListener('click', () => this.loadFile());
+        // 모바일 버튼 이벤트
+        const runBtn = document.getElementById('run-btn');
+        const clearOutputBtn = document.getElementById('clear-output-btn-mobile');
+        const clearCodeBtn = document.getElementById('clear-code-btn');
+        const saveFileBtn = document.getElementById('save-file-btn');
+        const loadFileBtn = document.getElementById('load-file-btn');
+        
+        if (runBtn) runBtn.addEventListener('click', () => this.runPythonCode());
+        if (clearOutputBtn) clearOutputBtn.addEventListener('click', () => this.clearOutput());
+        if (clearCodeBtn) clearCodeBtn.addEventListener('click', () => this.clearCode());
+        if (saveFileBtn) saveFileBtn.addEventListener('click', () => this.showSaveModal());
+        if (loadFileBtn) loadFileBtn.addEventListener('click', () => this.loadFile());
+        
+        // 데스크톱 버튼 이벤트
+        const runBtnDesktop = document.getElementById('run-btn-desktop');
+        const clearOutputBtnDesktop = document.getElementById('clear-output-btn-desktop');
+        const clearCodeBtnDesktop = document.getElementById('clear-code-btn-desktop');
+        const saveFileBtnDesktop = document.getElementById('save-file-btn-desktop');
+        const loadFileBtnDesktop = document.getElementById('load-file-btn-desktop');
+        
+        if (runBtnDesktop) runBtnDesktop.addEventListener('click', () => this.runPythonCode());
+        if (clearOutputBtnDesktop) clearOutputBtnDesktop.addEventListener('click', () => this.clearOutput());
+        if (clearCodeBtnDesktop) clearCodeBtnDesktop.addEventListener('click', () => this.clearCode());
+        if (saveFileBtnDesktop) saveFileBtnDesktop.addEventListener('click', () => this.showSaveModal());
+        if (loadFileBtnDesktop) loadFileBtnDesktop.addEventListener('click', () => this.loadFile());
         
         // 파일 처리
-        document.getElementById('file-loader').addEventListener('change', (e) => this.handleFileLoad(e));
+        const fileLoader = document.getElementById('file-loader');
+        if (fileLoader) fileLoader.addEventListener('change', (e) => this.handleFileLoad(e));
         
         // 모달 이벤트
-        document.getElementById('cancel-save-btn').addEventListener('click', () => this.hideSaveModal());
-        document.getElementById('confirm-save-btn').addEventListener('click', () => this.saveFile());
-        document.getElementById('filename-input').addEventListener('keypress', (e) => {
+        const cancelSaveBtn = document.getElementById('cancel-save-btn');
+        const confirmSaveBtn = document.getElementById('confirm-save-btn');
+        const filenameInput = document.getElementById('filename-input');
+        
+        if (cancelSaveBtn) cancelSaveBtn.addEventListener('click', () => this.hideSaveModal());
+        if (confirmSaveBtn) confirmSaveBtn.addEventListener('click', () => this.saveFile());
+        if (filenameInput) filenameInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.saveFile();
         });
     }
@@ -249,7 +291,13 @@ for i in range(1, 4):
             }
             
             document.getElementById('loader-overlay').style.display = 'none';
-            document.getElementById('run-btn').disabled = false;
+            
+            // 실행 버튼 활성화 (모바일 및 데스크톱)
+            const runBtn = document.getElementById('run-btn');
+            const runBtnDesktop = document.getElementById('run-btn-desktop');
+            if (runBtn) runBtn.disabled = false;
+            if (runBtnDesktop) runBtnDesktop.disabled = false;
+            
             console.log("Pyodide 및 input() shim이 준비되었습니다.");
             
         } catch (error) {
@@ -558,7 +606,7 @@ for i in range(1, 4):
                         <div class="bg-gray-900 rounded border border-gray-600">
                             <textarea id="problem-code-editor" rows="12" 
                                       class="w-full p-4 bg-gray-900 text-green-300 font-mono text-sm rounded resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                                      placeholder="여기에 코드를 작성하세요...">${session.initial_code || ''}</textarea>
+                                      placeholder="여기에 코드를 작성하세요..."></textarea>
                         </div>
                         
                         <div class="grid grid-cols-1 gap-3">
@@ -580,7 +628,7 @@ for i in range(1, 4):
                     
                     <div class="space-y-4">
                         <h3 class="text-lg font-semibold text-white">실행 결과</h3>
-                        <pre id="problem-output" class="w-full h-64 p-4 bg-gray-900 text-white font-mono text-sm rounded border border-gray-600 overflow-auto">테스트 실행 버튼을 클릭하여 코드를 확인해보세요.</pre>
+                        <pre id="problem-output" class="w-full h-64 p-4 bg-gray-900 text-white font-mono text-sm rounded border border-gray-600 overflow-auto">코드를 작성한 후 테스트 실행 버튼을 클릭하세요.</pre>
                         
                         <!-- 내 제출 기록 -->
                         <div>
@@ -812,12 +860,19 @@ for i in range(1, 4):
                                 <p class="text-gray-300 text-sm">${submission.problem_title}</p>
                             </div>
                             <div class="text-right">
-                                <span class="px-2 py-1 ${this.getSubmissionBadgeColor(submission.status)} text-xs rounded">
-                                    ${this.getSubmissionStatusText(submission.status)}
-                                </span>
-                                <p class="text-gray-400 text-xs mt-1">
-                                    ${new Date(submission.submitted_at).toLocaleString('ko-KR')}
-                                </p>
+                                <div class="flex flex-col items-end gap-2">
+                                    <span class="px-2 py-1 ${this.getSubmissionBadgeColor(submission.status)} text-xs rounded">
+                                        ${this.getSubmissionStatusText(submission.status)}
+                                    </span>
+                                    <button onclick="studentEnv.requestDeleteSubmission(${submission.id}, '${submission.problem_title}')" 
+                                            class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition-colors duration-200"
+                                            title="삭제 요청">
+                                        <i class="fas fa-trash-alt mr-1"></i>삭제 요청
+                                    </button>
+                                    <p class="text-gray-400 text-xs">
+                                        ${new Date(submission.submitted_at).toLocaleString('ko-KR')}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                         
@@ -890,6 +945,140 @@ for i in range(1, 4):
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/';
+    }
+    
+    // 제출 기록 삭제 요청
+    requestDeleteSubmission(submissionId, problemTitle) {
+        // 모달 생성
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4';
+        modal.innerHTML = `
+            <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-md border border-gray-700">
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-exclamation-triangle text-yellow-400 text-xl mr-3"></i>
+                        <h3 class="text-lg font-bold text-white">제출 기록 삭제 요청</h3>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-gray-300 text-sm mb-2">다음 제출 기록의 삭제를 요청하시겠습니까?</p>
+                        <div class="bg-gray-700 p-3 rounded border border-gray-600">
+                            <p class="text-white font-medium">${problemTitle}</p>
+                            <p class="text-gray-400 text-xs">제출 ID: #${submissionId}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">삭제 사유 (선택사항)</label>
+                        <textarea id="delete-reason" 
+                                  class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white text-sm resize-none"
+                                  rows="3"
+                                  placeholder="삭제를 요청하는 이유를 입력하세요 (예: 잘못 제출됨, 개인정보 포함 등)"></textarea>
+                    </div>
+                    
+                    <div class="bg-blue-900 border border-blue-700 p-3 rounded mb-6">
+                        <div class="flex items-start">
+                            <i class="fas fa-info-circle text-blue-400 mr-2 mt-0.5 text-sm"></i>
+                            <div class="text-blue-200 text-xs">
+                                <p class="font-semibold mb-1">안내사항:</p>
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li>삭제 요청은 교사의 승인이 필요합니다</li>
+                                    <li>승인 후에는 기록을 복구할 수 없습니다</li>
+                                    <li>요청 상태는 제출 기록에서 확인할 수 있습니다</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
+                        <button onclick="this.closest('.fixed').remove()" 
+                                class="w-full sm:w-auto px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors duration-200">
+                            취소
+                        </button>
+                        <button onclick="studentEnv.confirmDeleteRequest(${submissionId})" 
+                                class="w-full sm:w-auto px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors duration-200">
+                            삭제 요청
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+    
+    async confirmDeleteRequest(submissionId) {
+        const reason = document.getElementById('delete-reason').value;
+        const modal = document.querySelector('.fixed');
+        
+        try {
+            const response = await fetch(`/api/student/submissions/${submissionId}/delete-request`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify({ reason })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                // 성공 모달 표시
+                this.showNotificationModal('success', '삭제 요청 완료', data.message);
+                
+                // 제출 기록 새로고침
+                if (document.getElementById('tab-history').classList.contains('bg-cyan-600')) {
+                    this.loadSubmissionHistory();
+                }
+            } else {
+                this.showNotificationModal('error', '요청 실패', data.error);
+            }
+        } catch (error) {
+            console.error('Delete request error:', error);
+            this.showNotificationModal('error', '오류 발생', '서버 연결에 실패했습니다.');
+        }
+        
+        // 모달 닫기
+        if (modal) {
+            modal.remove();
+        }
+    }
+    
+    showNotificationModal(type, title, message) {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4';
+        
+        const bgColor = type === 'success' ? 'bg-green-900 border-green-700' : 'bg-red-900 border-red-700';
+        const iconColor = type === 'success' ? 'text-green-400' : 'text-red-400';
+        const textColor = type === 'success' ? 'text-green-200' : 'text-red-200';
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+        
+        modal.innerHTML = `
+            <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-sm border border-gray-700">
+                <div class="p-6 text-center">
+                    <div class="${bgColor} p-3 rounded-lg mb-4 border">
+                        <i class="fas ${icon} ${iconColor} text-2xl mb-2"></i>
+                        <h3 class="text-lg font-bold text-white">${title}</h3>
+                        <p class="${textColor} text-sm mt-1">${message}</p>
+                    </div>
+                    
+                    <button onclick="this.closest('.fixed').remove()" 
+                            class="w-full px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors duration-200">
+                        확인
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // 3초 후 자동 닫기
+        setTimeout(() => {
+            if (document.body.contains(modal)) {
+                modal.remove();
+            }
+        }, 3000);
     }
 }
 

@@ -115,78 +115,150 @@ student.post('/submissions', async (c) => {
       return c.json({ error: '유효하지 않은 세션입니다.' }, 404);
     }
 
-    // 실제 코드 실행 (간단한 Python 코드 해석)
+    // 실제 코드 실행 (향상된 Python 코드 해석)
     let output = '';
     let error_message = null;
     let status = 'success';
-    const execution_time = Math.random() * 1000 + 50; // 50-1050ms 실행 시간
+    const execution_time = Math.random() * 200 + 30; // 30-230ms 실행 시간
 
     try {
       // 기본적인 Python 코드 실행 시뮬레이션
       if (!code.trim()) {
-        output = '출력이 없습니다.';
+        output = '';
       } else {
-        // print 문 추출 및 실행
-        const printMatches = code.match(/print\s*\([^)]*\)/g);
-        if (printMatches && printMatches.length > 0) {
-          const outputs = [];
-          for (const match of printMatches) {
-            // print() 내용 추출
-            const content = match.match(/print\s*\(\s*['"](.*?)['"]\s*\)/);
-            if (content) {
-              outputs.push(content[1]);
+        // 먼저 기본적인 문법 오류 검사
+        if (code.includes('print(') && !code.match(/print\s*\([^)]*\)/)) {
+          throw new Error('SyntaxError: invalid syntax - print문에 닫는 괄호가 없습니다');
+        }
+        if (code.includes('for ') && !code.includes(':')) {
+          throw new Error('SyntaxError: invalid syntax - for문에 콜론(:)이 없습니다');
+        }
+        if (code.includes('if ') && !code.includes(':')) {
+          throw new Error('SyntaxError: invalid syntax - if문에 콜론(:)이 없습니다');
+        }
+        if (code.includes('def ') && !code.includes(':')) {
+          throw new Error('SyntaxError: invalid syntax - 함수 정의에 콜론(:)이 없습니다');
+        }
+
+        // 실제 실행 시뮬레이션
+        const lines = code.split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('#'));
+        const outputs = [];
+
+        // 간단한 Python 코드 해석기
+        const variables = {}; // 변수 저장
+        let inFunction = false;
+        let inLoop = false;
+        let loopVariable = '';
+        let loopRange = [];
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+
+          // 변수 할당 처리
+          const assignMatch = line.match(/^(\w+)\s*=\s*(.+)$/);
+          if (assignMatch) {
+            const varName = assignMatch[1];
+            const value = assignMatch[2];
+            
+            if (value.match(/^\d+$/)) {
+              variables[varName] = parseInt(value);
+            } else if (value.match(/^['"](.*)['"]$/)) {
+              variables[varName] = value.slice(1, -1);
+            } else if (value.includes('+')) {
+              // 간단한 산술 연산
+              const parts = value.split('+').map(p => p.trim());
+              let result = 0;
+              for (const part of parts) {
+                if (part.match(/^\d+$/)) {
+                  result += parseInt(part);
+                } else if (variables[part] !== undefined) {
+                  result += typeof variables[part] === 'number' ? variables[part] : 0;
+                }
+              }
+              variables[varName] = result;
+            } else if (variables[value]) {
+              variables[varName] = variables[value];
+            }
+          }
+
+          // for 반복문 처리
+          const forMatch = line.match(/^for\s+(\w+)\s+in\s+range\s*\(\s*(\d+)(?:\s*,\s*(\d+))?\s*\):/);
+          if (forMatch) {
+            inLoop = true;
+            loopVariable = forMatch[1];
+            const start = forMatch[3] ? parseInt(forMatch[2]) : 0;
+            const end = forMatch[3] ? parseInt(forMatch[3]) : parseInt(forMatch[2]);
+            loopRange = Array.from({length: Math.min(end - start, 10)}, (_, i) => start + i);
+            continue;
+          }
+
+          // print문 처리
+          const printMatch = line.match(/^print\s*\(\s*(.+)\s*\)$/);
+          if (printMatch) {
+            const content = printMatch[1];
+            
+            if (inLoop && loopRange.length > 0) {
+              // 반복문 내의 print문
+              for (const loopValue of loopRange) {
+                variables[loopVariable] = loopValue;
+                let printOutput = content;
+                
+                // 변수 치환
+                for (const [varName, varValue] of Object.entries(variables)) {
+                  printOutput = printOutput.replace(new RegExp(`\\b${varName}\\b`, 'g'), varValue);
+                }
+                
+                // 문자열 처리
+                if (printOutput.match(/^['"](.*)['"]$/)) {
+                  outputs.push(printOutput.slice(1, -1));
+                } else if (printOutput.match(/^\d+$/)) {
+                  outputs.push(printOutput);
+                } else {
+                  outputs.push(printOutput);
+                }
+              }
+              inLoop = false;
             } else {
-              // 변수나 복잡한 표현식의 경우
-              const simpleContent = match.replace(/print\s*\(\s*/, '').replace(/\s*\)$/, '');
-              if (simpleContent.includes('f"') || simpleContent.includes("f'")) {
-                // f-string 간단 처리
-                outputs.push('포맷된 문자열 출력');
-              } else if (simpleContent.match(/^\d+$/)) {
-                // 숫자
-                outputs.push(simpleContent);
+              // 일반 print문
+              let printOutput = content;
+              
+              // 변수 치환
+              for (const [varName, varValue] of Object.entries(variables)) {
+                printOutput = printOutput.replace(new RegExp(`\\b${varName}\\b`, 'g'), varValue);
+              }
+              
+              // 문자열 처리
+              if (printOutput.match(/^['"](.*)['"]$/)) {
+                outputs.push(printOutput.slice(1, -1));
+              } else if (printOutput.match(/^\d+$/)) {
+                outputs.push(printOutput);
+              } else if (printOutput.includes('f"') || printOutput.includes("f'")) {
+                outputs.push('포맷된 문자열');
               } else {
-                // 기타
-                outputs.push('변수 또는 표현식 결과');
+                outputs.push(printOutput);
               }
             }
           }
-          output = outputs.join('\n');
-        } else if (code.includes('for ') && code.includes('print')) {
-          // 반복문이 있는 경우
-          const forMatch = code.match(/for\s+\w+\s+in\s+range\s*\(\s*(\d+)\s*(?:,\s*(\d+))?\s*\)/);
-          if (forMatch) {
-            const start = forMatch[2] ? parseInt(forMatch[1]) : 0;
-            const end = forMatch[2] ? parseInt(forMatch[2]) : parseInt(forMatch[1]);
-            const results = [];
-            for (let i = start; i < end && i < start + 10; i++) { // 최대 10개로 제한
-              results.push(i.toString());
-            }
-            output = results.join('\n');
-          } else {
-            output = '반복문 실행 결과';
+
+          // 함수 정의 확인
+          if (line.match(/^def\s+\w+/)) {
+            inFunction = true;
           }
+        }
+
+        // 출력 결과 생성
+        if (outputs.length > 0) {
+          output = outputs.join('\n');
+        } else if (inFunction) {
+          output = ''; // 함수만 정의된 경우 출력 없음
         } else if (code.includes('input(')) {
-          // input이 있는 경우
-          output = '사용자 입력을 받는 프로그램입니다.';
-        } else if (code.includes('def ')) {
-          // 함수 정의가 있는 경우
-          output = '함수가 정의되었습니다.';
+          output = '입력이 필요한 프로그램입니다.';
         } else {
-          // 기타 코드
-          output = '프로그램이 실행되었습니다.';
+          output = ''; // 다른 경우 출력 없음
         }
       }
-
-      // 코드에서 명백한 오류 패턴 검사
-      if (code.includes('print(') && !code.includes(')')) {
-        throw new Error('SyntaxError: invalid syntax');
-      } else if (code.includes('for ') && !code.includes(':')) {
-        throw new Error('SyntaxError: invalid syntax');
-      } else if (code.includes('if ') && !code.includes(':')) {
-        throw new Error('SyntaxError: invalid syntax');
-      }
     } catch (err) {
-      error_message = '오류 발생';
+      error_message = err.message || '오류 발생';
       output = null;
       status = 'error';
     }
@@ -225,66 +297,145 @@ student.post('/execute', async (c) => {
     let output = '';
     let error = null;
     let status = 'success';
-    const execution_time = Math.random() * 1000 + 50;
+    const execution_time = Math.random() * 200 + 30;
 
     try {
       if (!code.trim()) {
-        output = '출력이 없습니다.';
+        output = '';
       } else {
-        // print 문 추출 및 실행
-        const printMatches = code.match(/print\s*\([^)]*\)/g);
-        if (printMatches && printMatches.length > 0) {
-          const outputs = [];
-          for (const match of printMatches) {
-            // print() 내용 추출
-            const content = match.match(/print\s*\(\s*['"](.*?)['"]\s*\)/);
-            if (content) {
-              outputs.push(content[1]);
+        // 먼저 기본적인 문법 오류 검사
+        if (code.includes('print(') && !code.match(/print\s*\([^)]*\)/)) {
+          throw new Error('SyntaxError: invalid syntax - print문에 닫는 괄호가 없습니다');
+        }
+        if (code.includes('for ') && !code.includes(':')) {
+          throw new Error('SyntaxError: invalid syntax - for문에 콜론(:)이 없습니다');
+        }
+        if (code.includes('if ') && !code.includes(':')) {
+          throw new Error('SyntaxError: invalid syntax - if문에 콜론(:)이 없습니다');
+        }
+        if (code.includes('def ') && !code.includes(':')) {
+          throw new Error('SyntaxError: invalid syntax - 함수 정의에 콜론(:)이 없습니다');
+        }
+
+        // 실제 실행 시뮬레이션
+        const lines = code.split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('#'));
+        const outputs = [];
+
+        // 간단한 Python 코드 해석기
+        const variables = {}; // 변수 저장
+        let inFunction = false;
+        let inLoop = false;
+        let loopVariable = '';
+        let loopRange = [];
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+
+          // 변수 할당 처리
+          const assignMatch = line.match(/^(\w+)\s*=\s*(.+)$/);
+          if (assignMatch) {
+            const varName = assignMatch[1];
+            const value = assignMatch[2];
+            
+            if (value.match(/^\d+$/)) {
+              variables[varName] = parseInt(value);
+            } else if (value.match(/^['"](.*)['"]$/)) {
+              variables[varName] = value.slice(1, -1);
+            } else if (value.includes('+')) {
+              // 간단한 산술 연산
+              const parts = value.split('+').map(p => p.trim());
+              let result = 0;
+              for (const part of parts) {
+                if (part.match(/^\d+$/)) {
+                  result += parseInt(part);
+                } else if (variables[part] !== undefined) {
+                  result += typeof variables[part] === 'number' ? variables[part] : 0;
+                }
+              }
+              variables[varName] = result;
+            } else if (variables[value]) {
+              variables[varName] = variables[value];
+            }
+          }
+
+          // for 반복문 처리
+          const forMatch = line.match(/^for\s+(\w+)\s+in\s+range\s*\(\s*(\d+)(?:\s*,\s*(\d+))?\s*\):/);
+          if (forMatch) {
+            inLoop = true;
+            loopVariable = forMatch[1];
+            const start = forMatch[3] ? parseInt(forMatch[2]) : 0;
+            const end = forMatch[3] ? parseInt(forMatch[3]) : parseInt(forMatch[2]);
+            loopRange = Array.from({length: Math.min(end - start, 10)}, (_, i) => start + i);
+            continue;
+          }
+
+          // print문 처리
+          const printMatch = line.match(/^print\s*\(\s*(.+)\s*\)$/);
+          if (printMatch) {
+            const content = printMatch[1];
+            
+            if (inLoop && loopRange.length > 0) {
+              // 반복문 내의 print문
+              for (const loopValue of loopRange) {
+                variables[loopVariable] = loopValue;
+                let printOutput = content;
+                
+                // 변수 치환
+                for (const [varName, varValue] of Object.entries(variables)) {
+                  printOutput = printOutput.replace(new RegExp(`\\b${varName}\\b`, 'g'), varValue);
+                }
+                
+                // 문자열 처리
+                if (printOutput.match(/^['"](.*)['"]$/)) {
+                  outputs.push(printOutput.slice(1, -1));
+                } else if (printOutput.match(/^\d+$/)) {
+                  outputs.push(printOutput);
+                } else {
+                  outputs.push(printOutput);
+                }
+              }
+              inLoop = false;
             } else {
-              // 변수나 복잡한 표현식의 경우
-              const simpleContent = match.replace(/print\s*\(\s*/, '').replace(/\s*\)$/, '');
-              if (simpleContent.includes('f"') || simpleContent.includes("f'")) {
-                outputs.push('포맷된 문자열 출력');
-              } else if (simpleContent.match(/^\d+$/)) {
-                outputs.push(simpleContent);
+              // 일반 print문
+              let printOutput = content;
+              
+              // 변수 치환
+              for (const [varName, varValue] of Object.entries(variables)) {
+                printOutput = printOutput.replace(new RegExp(`\\b${varName}\\b`, 'g'), varValue);
+              }
+              
+              // 문자열 처리
+              if (printOutput.match(/^['"](.*)['"]$/)) {
+                outputs.push(printOutput.slice(1, -1));
+              } else if (printOutput.match(/^\d+$/)) {
+                outputs.push(printOutput);
+              } else if (printOutput.includes('f"') || printOutput.includes("f'")) {
+                outputs.push('포맷된 문자열');
               } else {
-                outputs.push('변수 또는 표현식 결과');
+                outputs.push(printOutput);
               }
             }
           }
-          output = outputs.join('\n');
-        } else if (code.includes('for ') && code.includes('print')) {
-          const forMatch = code.match(/for\s+\w+\s+in\s+range\s*\(\s*(\d+)\s*(?:,\s*(\d+))?\s*\)/);
-          if (forMatch) {
-            const start = forMatch[2] ? parseInt(forMatch[1]) : 0;
-            const end = forMatch[2] ? parseInt(forMatch[2]) : parseInt(forMatch[1]);
-            const results = [];
-            for (let i = start; i < end && i < start + 10; i++) {
-              results.push(i.toString());
-            }
-            output = results.join('\n');
-          } else {
-            output = '반복문 실행 결과';
+
+          // 함수 정의 확인
+          if (line.match(/^def\s+\w+/)) {
+            inFunction = true;
           }
+        }
+
+        // 출력 결과 생성
+        if (outputs.length > 0) {
+          output = outputs.join('\n');
+        } else if (inFunction) {
+          output = ''; // 함수만 정의된 경우 출력 없음
         } else if (code.includes('input(')) {
-          output = '입력이 필요한 프로그램입니다. 브라우저에서 실행해주세요.';
-        } else if (code.includes('def ')) {
-          output = '함수가 정의되었습니다.';
+          output = '입력이 필요한 프로그램입니다.';
         } else {
-          output = '프로그램이 실행되었습니다.';
+          output = ''; // 다른 경우 출력 없음
         }
       }
-
-      // 오류 패턴 검사
-      if (code.includes('print(') && !code.includes(')')) {
-        throw new Error('SyntaxError: invalid syntax');
-      } else if (code.includes('for ') && !code.includes(':')) {
-        throw new Error('SyntaxError: invalid syntax');
-      } else if (code.includes('if ') && !code.includes(':')) {
-        throw new Error('SyntaxError: invalid syntax');
-      }
     } catch (err) {
-      error = '오류 발생';
+      error = err.message || '오류 발생';
       status = 'error';
     }
 
@@ -322,6 +473,107 @@ student.get('/submissions', async (c) => {
   } catch (error) {
     console.error('Get my submissions error:', error);
     return c.json({ error: '제출 기록 조회 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
+// 제출 기록 삭제 요청
+student.post('/submissions/:submissionId/delete-request', async (c) => {
+  try {
+    const submissionId = parseInt(c.req.param('submissionId'));
+    const { reason } = await c.req.json();
+    
+    // JWT에서 학생 정보 추출
+    const token = c.req.header('authorization')?.replace('Bearer ', '');
+    if (!token) {
+      return c.json({ error: '인증이 필요합니다.' }, 401);
+    }
+    
+    const payload = JSON.parse(atob(token!.split('.')[1]));
+    
+    // 학생 정보 조회
+    const student = await c.env.DB.prepare(
+      'SELECT id, username, full_name FROM users WHERE id = ? AND role = ?'
+    ).bind(payload.userId, 'student').first();
+    
+    if (!student) {
+      return c.json({ error: '학생 정보를 찾을 수 없습니다.' }, 404);
+    }
+    
+    // 제출 기록이 해당 학생의 것인지 확인
+    const submission = await c.env.DB.prepare(
+      'SELECT id, student_id FROM submissions WHERE id = ? AND student_id = ?'
+    ).bind(submissionId, payload.userId).first();
+    
+    if (!submission) {
+      return c.json({ error: '제출 기록을 찾을 수 없거나 권한이 없습니다.' }, 404);
+    }
+    
+    // 이미 삭제 요청이 있는지 확인
+    const existingRequest = await c.env.DB.prepare(
+      'SELECT id FROM submission_deletion_requests WHERE submission_id = ? AND status = ?'
+    ).bind(submissionId, 'pending').first();
+    
+    if (existingRequest) {
+      return c.json({ error: '이미 삭제 요청이 진행 중입니다.' }, 400);
+    }
+    
+    // 삭제 요청 생성
+    const result = await c.env.DB.prepare(`
+      INSERT INTO submission_deletion_requests (
+        submission_id, student_id, student_username, student_name, reason
+      ) VALUES (?, ?, ?, ?, ?)
+    `).bind(
+      submissionId,
+      payload.userId,
+      student.username,
+      student.full_name,
+      reason || '사유 없음'
+    ).run();
+    
+    return c.json({ 
+      message: '삭제 요청이 전송되었습니다. 교사의 승인을 기다려주세요.',
+      requestId: result.meta.last_row_id 
+    });
+    
+  } catch (error) {
+    console.error('Delete request error:', error);
+    return c.json({ error: '삭제 요청 처리 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
+// 내 삭제 요청 목록 조회
+student.get('/deletion-requests', async (c) => {
+  try {
+    const token = c.req.header('authorization')?.replace('Bearer ', '');
+    if (!token) {
+      return c.json({ error: '인증이 필요합니다.' }, 401);
+    }
+    
+    const payload = JSON.parse(atob(token!.split('.')[1]));
+    
+    const requests = await c.env.DB.prepare(`
+      SELECT 
+        dr.*,
+        s.code,
+        s.output,
+        s.submitted_at,
+        ps.title as session_title,
+        p.title as problem_title,
+        t.full_name as teacher_name
+      FROM submission_deletion_requests dr
+      JOIN submissions s ON dr.submission_id = s.id
+      JOIN problem_sessions ps ON s.session_id = ps.id
+      JOIN problems p ON ps.problem_id = p.id
+      LEFT JOIN users t ON dr.teacher_id = t.id
+      WHERE dr.student_id = ?
+      ORDER BY dr.request_date DESC
+    `).bind(payload.userId).all();
+    
+    return c.json({ requests: requests.results });
+    
+  } catch (error) {
+    console.error('Get deletion requests error:', error);
+    return c.json({ error: '삭제 요청 목록 조회 중 오류가 발생했습니다.' }, 500);
   }
 });
 

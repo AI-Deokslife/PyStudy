@@ -23,17 +23,26 @@ class TeacherDashboard {
     renderHeader() {
         const app = document.getElementById('app');
         app.innerHTML = `
-            <header class="bg-gray-800 shadow-lg">
+            <!-- 모바일 메뉴 토글 버튼 -->
+            <button id="mobile-menu-toggle" class="md:hidden fixed top-4 left-4 z-50 bg-gray-700 hover:bg-gray-600 p-2 rounded-lg">
+                <i class="fas fa-bars text-white"></i>
+            </button>
+            
+            <!-- 모바일 오버레이 -->
+            <div id="mobile-overlay" class="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30 hidden"></div>
+            
+            <header class="bg-gray-800 shadow-lg sticky top-0 z-40">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between items-center h-16">
                         <div class="flex items-center">
-                            <i class="fas fa-chalkboard-teacher text-2xl text-blue-400 mr-3"></i>
-                            <h1 class="text-xl font-semibold text-white">교사 대시보드</h1>
+                            <div class="md:hidden w-8"></div> <!-- 모바일 메뉴 버튼 공간 확보 -->
+                            <i class="fas fa-chalkboard-teacher text-xl md:text-2xl text-blue-400 mr-2 md:mr-3"></i>
+                            <h1 class="text-lg md:text-xl font-semibold text-white">교사 대시보드</h1>
                         </div>
-                        <div class="flex items-center space-x-4">
-                            <span class="text-gray-300">${this.user.full_name} 선생님</span>
-                            <button onclick="teacherDashboard.logout()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white">
-                                <i class="fas fa-sign-out-alt mr-2"></i>로그아웃
+                        <div class="flex items-center space-x-2 md:space-x-4">
+                            <span class="text-gray-300 text-sm md:text-base hidden sm:inline">${this.user.full_name} 선생님</span>
+                            <button onclick="teacherDashboard.logout()" class="bg-red-600 hover:bg-red-700 px-2 md:px-4 py-2 rounded text-white text-sm md:text-base">
+                                <i class="fas fa-sign-out-alt mr-1 md:mr-2"></i><span class="hidden sm:inline">로그아웃</span>
                             </button>
                         </div>
                     </div>
@@ -41,10 +50,17 @@ class TeacherDashboard {
             </header>
             
             <div class="flex min-h-screen bg-gray-900">
-                <nav id="sidebar" class="w-64 bg-gray-800 shadow-lg">
+                <!-- 데스크톱 사이드바 -->
+                <nav id="sidebar" class="hidden md:block w-64 bg-gray-800 shadow-lg">
                     <!-- 네비게이션 메뉴 -->
                 </nav>
-                <main id="main-content" class="flex-1 p-6">
+                
+                <!-- 모바일 사이드바 -->
+                <nav id="mobile-sidebar" class="md:hidden fixed left-0 top-0 h-full w-64 bg-gray-800 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out z-40">
+                    <!-- 네비게이션 메뉴 (모바일) -->
+                </nav>
+                
+                <main id="main-content" class="flex-1 p-4 md:p-6 w-full md:w-auto">
                     <!-- 메인 콘텐츠 -->
                 </main>
             </div>
@@ -52,37 +68,101 @@ class TeacherDashboard {
     }
     
     renderNavigation() {
-        const sidebar = document.getElementById('sidebar');
-        sidebar.innerHTML = `
-            <div class="p-6">
+        const navigationHTML = `
+            <div class="p-4 md:p-6">
                 <ul class="space-y-2">
                     <li>
-                        <button onclick="teacherDashboard.showProblemManagement()" 
+                        <button onclick="teacherDashboard.showProblemManagement(); teacherDashboard.closeMobileMenu();" 
                                 class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
                             <i class="fas fa-tasks mr-3"></i>문제 관리
                         </button>
                     </li>
                     <li>
-                        <button onclick="teacherDashboard.showLiveSession()" 
+                        <button onclick="teacherDashboard.showLiveSession(); teacherDashboard.closeMobileMenu();" 
                                 class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
                             <i class="fas fa-broadcast-tower mr-3"></i>실시간 세션
                         </button>
                     </li>
                     <li>
-                        <button onclick="teacherDashboard.showSessionHistory()" 
+                        <button onclick="teacherDashboard.showSessionHistory(); teacherDashboard.closeMobileMenu();" 
                                 class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
                             <i class="fas fa-history mr-3"></i>세션 기록
                         </button>
                     </li>
                     <li>
-                        <button onclick="teacherDashboard.showStudentProgress()" 
+                        <button onclick="teacherDashboard.showStudentProgress(); teacherDashboard.closeMobileMenu();" 
                                 class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
                             <i class="fas fa-chart-line mr-3"></i>학생 진도
+                        </button>
+                    </li>
+                    <li class="border-t border-gray-600 pt-2 mt-2">
+                        <button onclick="teacherDashboard.showDeletionRequests(); teacherDashboard.closeMobileMenu();" 
+                                class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
+                            <i class="fas fa-trash-restore mr-3"></i>삭제 요청 관리
+                            <span id="pending-requests-badge" class="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1 hidden">0</span>
                         </button>
                     </li>
                 </ul>
             </div>
         `;
+        
+        // 데스크톱 사이드바
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) {
+            sidebar.innerHTML = navigationHTML;
+        }
+        
+        // 모바일 사이드바
+        const mobileSidebar = document.getElementById('mobile-sidebar');
+        if (mobileSidebar) {
+            mobileSidebar.innerHTML = `
+                <div class="p-4 border-b border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-white">메뉴</h2>
+                        <button onclick="teacherDashboard.closeMobileMenu()" class="text-gray-400 hover:text-white">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                ${navigationHTML}
+            `;
+        }
+        
+        // 모바일 메뉴 이벤트 리스너
+        this.setupMobileMenu();
+    }
+    
+    setupMobileMenu() {
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+        const mobileOverlay = document.getElementById('mobile-overlay');
+        
+        if (mobileMenuToggle) {
+            mobileMenuToggle.addEventListener('click', () => this.toggleMobileMenu());
+        }
+        
+        if (mobileOverlay) {
+            mobileOverlay.addEventListener('click', () => this.closeMobileMenu());
+        }
+    }
+    
+    toggleMobileMenu() {
+        const mobileSidebar = document.getElementById('mobile-sidebar');
+        const mobileOverlay = document.getElementById('mobile-overlay');
+        
+        if (mobileSidebar && mobileOverlay) {
+            mobileSidebar.classList.toggle('-translate-x-full');
+            mobileOverlay.classList.toggle('hidden');
+        }
+    }
+    
+    closeMobileMenu() {
+        const mobileSidebar = document.getElementById('mobile-sidebar');
+        const mobileOverlay = document.getElementById('mobile-overlay');
+        
+        if (mobileSidebar && mobileOverlay) {
+            mobileSidebar.classList.add('-translate-x-full');
+            mobileOverlay.classList.add('hidden');
+        }
     }
     
     async showProblemManagement() {
@@ -600,11 +680,48 @@ class TeacherDashboard {
         }
         
         submissionsList.innerHTML = `
+            <!-- 제출 관리 툴바 -->
+            <div class="bg-gray-800 p-4 rounded-lg mb-4 border border-gray-600">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="select-all-submissions" onchange="teacherDashboard.toggleSelectAll()" 
+                                   class="mr-2 bg-gray-700 border-gray-600 rounded focus:ring-blue-500">
+                            <span class="text-gray-300">전체 선택</span>
+                        </label>
+                        <span id="selected-count" class="text-gray-400 text-sm">0개 선택됨</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="teacherDashboard.downloadSelected()" 
+                                class="bg-green-600 hover:bg-green-700 px-3 py-2 rounded text-white text-sm" 
+                                id="download-selected-btn" disabled>
+                            <i class="fas fa-download mr-1"></i>선택 다운로드
+                        </button>
+                        <button onclick="teacherDashboard.downloadAll()" 
+                                class="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-white text-sm">
+                            <i class="fas fa-download mr-1"></i>전체 다운로드
+                        </button>
+                        <button onclick="teacherDashboard.deleteSelected()" 
+                                class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded text-white text-sm" 
+                                id="delete-selected-btn" disabled>
+                            <i class="fas fa-trash mr-1"></i>선택 삭제
+                        </button>
+                        <button onclick="teacherDashboard.deleteAll()" 
+                                class="bg-red-800 hover:bg-red-900 px-3 py-2 rounded text-white text-sm">
+                            <i class="fas fa-trash-alt mr-1"></i>전체 삭제
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 제출 목록 -->
             <div class="space-y-3">
                 ${submissions.map(submission => `
                     <div class="bg-gray-800 p-4 rounded border-l-4 ${this.getSubmissionBorderColor(submission.status)}">
                         <div class="flex justify-between items-start mb-3">
                             <div class="flex items-center">
+                                <input type="checkbox" class="submission-checkbox mr-3 bg-gray-700 border-gray-600 rounded focus:ring-blue-500" 
+                                       value="${submission.id}" onchange="teacherDashboard.updateSelectionCount()">
                                 <button onclick="teacherDashboard.showSubmissionDetail(${JSON.stringify(submission).replace(/"/g, '&quot;')})" 
                                         class="font-semibold text-white hover:text-cyan-400 cursor-pointer transition-colors">
                                     ${submission.student_name}
@@ -885,11 +1002,585 @@ class TeacherDashboard {
         `;
     }
     
+    // 제출 관리 함수들
+    toggleSelectAll() {
+        const selectAllCheckbox = document.getElementById('select-all-submissions');
+        const submissionCheckboxes = document.querySelectorAll('.submission-checkbox');
+        
+        submissionCheckboxes.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+        
+        this.updateSelectionCount();
+    }
+    
+    updateSelectionCount() {
+        const selectedCheckboxes = document.querySelectorAll('.submission-checkbox:checked');
+        const count = selectedCheckboxes.length;
+        const totalCheckboxes = document.querySelectorAll('.submission-checkbox');
+        
+        document.getElementById('selected-count').textContent = `${count}개 선택됨`;
+        
+        // 버튼 활성화/비활성화
+        const downloadSelectedBtn = document.getElementById('download-selected-btn');
+        const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+        
+        if (downloadSelectedBtn && deleteSelectedBtn) {
+            downloadSelectedBtn.disabled = count === 0;
+            deleteSelectedBtn.disabled = count === 0;
+        }
+        
+        // 전체 선택 체크박스 상태 업데이트
+        const selectAllCheckbox = document.getElementById('select-all-submissions');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = count === totalCheckboxes.length && count > 0;
+            selectAllCheckbox.indeterminate = count > 0 && count < totalCheckboxes.length;
+        }
+    }
+    
+    async deleteSelected() {
+        const selectedCheckboxes = document.querySelectorAll('.submission-checkbox:checked');
+        const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+        
+        if (selectedIds.length === 0) {
+            alert('삭제할 제출을 선택해주세요.');
+            return;
+        }
+        
+        if (!confirm(`선택한 ${selectedIds.length}개의 제출을 삭제하시겠습니까?`)) {
+            return;
+        }
+        
+        try {
+            let successCount = 0;
+            let errorCount = 0;
+            
+            // 각 제출을 개별적으로 삭제
+            for (const submissionId of selectedIds) {
+                try {
+                    const response = await fetch(`/api/teacher/submissions/${submissionId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${this.token}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        successCount++;
+                    } else {
+                        errorCount++;
+                    }
+                } catch (error) {
+                    errorCount++;
+                }
+            }
+            
+            if (successCount > 0) {
+                this.showNotification('success', `${successCount}개의 제출이 삭제되었습니다.`);
+                // 현재 세션의 제출 목록 새로고침
+                if (this.currentSessionId) {
+                    this.loadSessionSubmissions(this.currentSessionId);
+                }
+            }
+            
+            if (errorCount > 0) {
+                this.showNotification('error', `${errorCount}개의 제출 삭제에 실패했습니다.`);
+            }
+            
+        } catch (error) {
+            this.showNotification('error', '삭제 중 오류가 발생했습니다.');
+        }
+    }
+    
+    async deleteAll() {
+        if (!this.currentSessionId) {
+            alert('활성 세션을 선택해주세요.');
+            return;
+        }
+        
+        if (!confirm('이 세션의 모든 제출을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/teacher/sessions/${this.currentSessionId}/submissions`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            if (response.ok) {
+                alert('모든 제출이 삭제되었습니다.');
+                this.loadSessionSubmissions(this.currentSessionId);
+            } else {
+                const data = await response.json();
+                alert(`삭제 실패: ${data.error}`);
+            }
+        } catch (error) {
+            alert('삭제 중 오류가 발생했습니다.');
+        }
+    }
+    
+    async downloadSelected() {
+        const selectedCheckboxes = document.querySelectorAll('.submission-checkbox:checked');
+        const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+        
+        if (selectedIds.length === 0) {
+            alert('다운로드할 제출을 선택해주세요.');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/teacher/submissions/download', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify({ submissionIds: selectedIds })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.downloadExcel(data.submissions, `selected_submissions_${new Date().toISOString().slice(0, 10)}`);
+            } else {
+                const errorData = await response.json();
+                alert(`다운로드 실패: ${errorData.error}`);
+            }
+        } catch (error) {
+            alert('다운로드 중 오류가 발생했습니다.');
+        }
+    }
+    
+    async downloadAll() {
+        if (!this.currentSessionId) {
+            alert('활성 세션을 선택해주세요.');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/teacher/sessions/${this.currentSessionId}/submissions/download`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.downloadExcel(data.submissions, `session_${this.currentSessionId}_submissions_${new Date().toISOString().slice(0, 10)}`);
+            } else {
+                const errorData = await response.json();
+                alert(`다운로드 실패: ${errorData.error}`);
+            }
+        } catch (error) {
+            alert('다운로드 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 엑셀 다운로드 함수
+    downloadExcel(submissions, filename) {
+        // SheetJS 라이브러리를 동적으로 로드
+        if (typeof XLSX === 'undefined') {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+            script.onload = () => {
+                this.generateExcelFile(submissions, filename);
+            };
+            document.head.appendChild(script);
+        } else {
+            this.generateExcelFile(submissions, filename);
+        }
+    }
+    
+    generateExcelFile(submissions, filename) {
+        // 엑셀 데이터 준비
+        const worksheetData = [
+            ['제출ID', '학생이름', '학생ID', '문제제목', '세션제목', '클래스', '제출시간', '상태', '실행시간(ms)', '코드', '출력', '오류메시지']
+        ];
+        
+        submissions.forEach(sub => {
+            worksheetData.push([
+                sub.id || '',
+                sub.student_name || '',
+                sub.student_username || '',
+                sub.problem_title || '',
+                sub.session_title || '',
+                sub.class_id || '',
+                new Date(sub.submitted_at).toLocaleString('ko-KR'),
+                sub.status || '',
+                sub.execution_time || '',
+                sub.code || '',
+                sub.output || '',
+                sub.error_message || ''
+            ]);
+        });
+        
+        // 워크시트 생성
+        const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+        
+        // 컬럼 너비 설정
+        worksheet['!cols'] = [
+            { wch: 8 },   // 제출ID
+            { wch: 12 },  // 학생이름
+            { wch: 12 },  // 학생ID
+            { wch: 20 },  // 문제제목
+            { wch: 20 },  // 세션제목
+            { wch: 10 },  // 클래스
+            { wch: 18 },  // 제출시간
+            { wch: 8 },   // 상태
+            { wch: 12 },  // 실행시간
+            { wch: 50 },  // 코드
+            { wch: 30 },  // 출력
+            { wch: 30 }   // 오류메시지
+        ];
+        
+        // 워크북 생성
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, '제출현황');
+        
+        // 파일 다운로드
+        XLSX.writeFile(workbook, `${filename}.xlsx`);
+    }
+
     logout() {
         this.stopPolling();
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/';
+    }
+    
+    // 삭제 요청 관리 화면
+    async showDeletionRequests() {
+        this.stopPolling();
+        
+        const mainContent = document.getElementById('main-content');
+        mainContent.innerHTML = `
+            <div class="bg-gray-800 rounded-lg shadow-xl p-4 md:p-6">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                    <div>
+                        <h2 class="text-xl md:text-2xl font-bold text-white mb-2">
+                            <i class="fas fa-trash-restore mr-2 text-yellow-400"></i>제출 기록 삭제 요청 관리
+                        </h2>
+                        <p class="text-gray-400 text-sm">학생들이 요청한 제출 기록 삭제를 승인하거나 거부할 수 있습니다.</p>
+                    </div>
+                    <button onclick="teacherDashboard.refreshDeletionRequests()" 
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm transition-colors duration-200">
+                        <i class="fas fa-sync-alt mr-2"></i>새로고침
+                    </button>
+                </div>
+                
+                <div id="deletion-requests-content">
+                    <div class="text-center py-8">
+                        <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
+                        <p class="text-gray-400 mt-2">삭제 요청을 불러오는 중...</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        await this.loadDeletionRequests();
+    }
+    
+    async loadDeletionRequests() {
+        try {
+            const response = await fetch('/api/teacher/deletion-requests', {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.renderDeletionRequests(data.requests);
+                this.updatePendingRequestsBadge(data.requests.filter(req => req.status === 'pending').length);
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (error) {
+            document.getElementById('deletion-requests-content').innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-exclamation-triangle text-2xl text-red-400"></i>
+                    <p class="text-red-400 mt-2">삭제 요청을 불러오는데 실패했습니다.</p>
+                </div>
+            `;
+        }
+    }
+    
+    renderDeletionRequests(requests) {
+        const contentDiv = document.getElementById('deletion-requests-content');
+        
+        if (requests.length === 0) {
+            contentDiv.innerHTML = `
+                <div class="text-center py-12">
+                    <i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+                    <h3 class="text-lg font-semibold text-white mb-2">삭제 요청이 없습니다</h3>
+                    <p class="text-gray-400">현재 처리할 삭제 요청이 없습니다.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        const pendingRequests = requests.filter(req => req.status === 'pending');
+        const processedRequests = requests.filter(req => req.status !== 'pending');
+        
+        contentDiv.innerHTML = `
+            <!-- 대기 중인 요청 -->
+            ${pendingRequests.length > 0 ? `
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+                        <i class="fas fa-clock mr-2 text-yellow-400"></i>
+                        승인 대기 중 (${pendingRequests.length}개)
+                    </h3>
+                    <div class="space-y-4">
+                        ${pendingRequests.map(req => this.renderDeletionRequestCard(req, true)).join('')}
+                    </div>
+                </div>
+            ` : ''}
+            
+            <!-- 처리된 요청 -->
+            ${processedRequests.length > 0 ? `
+                <div>
+                    <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+                        <i class="fas fa-history mr-2 text-gray-400"></i>
+                        처리된 요청 (${processedRequests.length}개)
+                    </h3>
+                    <div class="space-y-4 max-h-96 overflow-y-auto">
+                        ${processedRequests.map(req => this.renderDeletionRequestCard(req, false)).join('')}
+                    </div>
+                </div>
+            ` : ''}
+        `;
+    }
+    
+    renderDeletionRequestCard(request, isPending) {
+        const statusColors = {
+            'pending': 'bg-yellow-900 border-yellow-700 text-yellow-300',
+            'approved': 'bg-green-900 border-green-700 text-green-300',
+            'rejected': 'bg-red-900 border-red-700 text-red-300'
+        };
+        
+        const statusIcons = {
+            'pending': 'fa-clock',
+            'approved': 'fa-check-circle',
+            'rejected': 'fa-times-circle'
+        };
+        
+        const statusTexts = {
+            'pending': '승인 대기',
+            'approved': '승인됨',
+            'rejected': '거부됨'
+        };
+        
+        return `
+            <div class="bg-gray-700 rounded-lg p-4 border ${isPending ? 'border-yellow-500' : 'border-gray-600'}">
+                <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-white font-semibold">${request.session_title}</h4>
+                            <span class="px-2 py-1 ${statusColors[request.status]} text-xs rounded border">
+                                <i class="fas ${statusIcons[request.status]} mr-1"></i>
+                                ${statusTexts[request.status]}
+                            </span>
+                        </div>
+                        
+                        <div class="space-y-2 text-sm">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-gray-300">
+                                <p><strong>문제:</strong> ${request.problem_title}</p>
+                                <p><strong>학생:</strong> ${request.student_name} (@${request.student_username})</p>
+                                <p><strong>제출 시간:</strong> ${new Date(request.submitted_at).toLocaleString('ko-KR')}</p>
+                                <p><strong>요청 시간:</strong> ${new Date(request.request_date).toLocaleString('ko-KR')}</p>
+                            </div>
+                            
+                            ${request.reason ? `
+                                <div class="mt-3 p-3 bg-gray-800 rounded border border-gray-600">
+                                    <p class="text-gray-400 text-xs mb-1">삭제 사유:</p>
+                                    <p class="text-gray-200">${request.reason}</p>
+                                </div>
+                            ` : ''}
+                            
+                            ${request.code ? `
+                                <div class="mt-3">
+                                    <p class="text-gray-400 text-xs mb-2">제출된 코드:</p>
+                                    <pre class="bg-gray-900 p-3 rounded text-green-300 text-xs overflow-x-auto max-h-32">${request.code}</pre>
+                                </div>
+                            ` : ''}
+                            
+                            ${request.output ? `
+                                <div class="mt-3">
+                                    <p class="text-gray-400 text-xs mb-2">출력 결과:</p>
+                                    <pre class="bg-gray-900 p-3 rounded text-white text-xs overflow-x-auto max-h-24">${request.output}</pre>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="flex-shrink-0">
+                        ${isPending ? `
+                            <div class="flex flex-col gap-2">
+                                <button onclick="teacherDashboard.showResponseModal(${request.id}, 'approve', '${request.student_name}', '${request.problem_title}')" 
+                                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm transition-colors duration-200 w-full">
+                                    <i class="fas fa-check mr-1"></i>승인
+                                </button>
+                                <button onclick="teacherDashboard.showResponseModal(${request.id}, 'reject', '${request.student_name}', '${request.problem_title}')" 
+                                        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm transition-colors duration-200 w-full">
+                                    <i class="fas fa-times mr-1"></i>거부
+                                </button>
+                            </div>
+                        ` : `
+                            <div class="text-xs text-gray-400 text-right">
+                                ${request.teacher_name ? `<p>처리자: ${request.teacher_name}</p>` : ''}
+                                ${request.response_date ? `<p>${new Date(request.response_date).toLocaleString('ko-KR')}</p>` : ''}
+                                ${request.teacher_response ? `<p class="mt-2 italic">"${request.teacher_response}"</p>` : ''}
+                            </div>
+                        `}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    showResponseModal(requestId, action, studentName, problemTitle) {
+        const isApprove = action === 'approve';
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4';
+        
+        modal.innerHTML = `
+            <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-md border border-gray-700">
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <i class="fas ${isApprove ? 'fa-check-circle text-green-400' : 'fa-times-circle text-red-400'} text-xl mr-3"></i>
+                        <h3 class="text-lg font-bold text-white">삭제 요청 ${isApprove ? '승인' : '거부'}</h3>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="text-gray-300 text-sm mb-2">다음 삭제 요청을 ${isApprove ? '승인' : '거부'}하시겠습니까?</p>
+                        <div class="bg-gray-700 p-3 rounded border border-gray-600">
+                            <p class="text-white font-medium">${problemTitle}</p>
+                            <p class="text-gray-400 text-xs">요청자: ${studentName}</p>
+                        </div>
+                    </div>
+                    
+                    ${isApprove ? `
+                        <div class="bg-red-900 border border-red-700 p-3 rounded mb-4">
+                            <div class="flex items-start">
+                                <i class="fas fa-exclamation-triangle text-red-400 mr-2 mt-0.5 text-sm"></i>
+                                <div class="text-red-200 text-xs">
+                                    <p class="font-semibold mb-1">주의사항:</p>
+                                    <p>승인하면 제출 기록이 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.</p>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">${isApprove ? '승인' : '거부'} 메시지 (선택사항)</label>
+                        <textarea id="response-message" 
+                                  class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-${isApprove ? 'green' : 'red'}-500 text-white text-sm resize-none"
+                                  rows="3"
+                                  placeholder="${isApprove ? '승인 사유를 입력하세요 (예: 정당한 요청으로 판단됩니다)' : '거부 사유를 입력하세요 (예: 충분한 사유가 없습니다)'}"></textarea>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
+                        <button onclick="this.closest('.fixed').remove()" 
+                                class="w-full sm:w-auto px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors duration-200">
+                            취소
+                        </button>
+                        <button onclick="teacherDashboard.processResponse(${requestId}, '${action}')" 
+                                class="w-full sm:w-auto px-4 py-2 bg-${isApprove ? 'green' : 'red'}-600 hover:bg-${isApprove ? 'green' : 'red'}-700 text-white rounded-md transition-colors duration-200">
+                            ${isApprove ? '승인' : '거부'} 확정
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+    
+    async processResponse(requestId, action) {
+        const responseMessage = document.getElementById('response-message').value;
+        const modal = document.querySelector('.fixed');
+        
+        try {
+            const response = await fetch(`/api/teacher/deletion-requests/${requestId}/response`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify({
+                    action,
+                    response: responseMessage
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                // 성공 알림
+                this.showNotification('success', data.message);
+                
+                // 삭제 요청 목록 새로고침
+                await this.refreshDeletionRequests();
+            } else {
+                this.showNotification('error', data.error);
+            }
+        } catch (error) {
+            console.error('Process response error:', error);
+            this.showNotification('error', '서버 연결에 실패했습니다.');
+        }
+        
+        // 모달 닫기
+        if (modal) {
+            modal.remove();
+        }
+    }
+    
+    async refreshDeletionRequests() {
+        await this.loadDeletionRequests();
+    }
+    
+    updatePendingRequestsBadge(count) {
+        const badge = document.getElementById('pending-requests-badge');
+        if (badge) {
+            if (count > 0) {
+                badge.textContent = count;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+    }
+    
+    showNotification(type, message) {
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg border max-w-sm ${
+            type === 'success' 
+                ? 'bg-green-900 border-green-700 text-green-200' 
+                : 'bg-red-900 border-red-700 text-red-200'
+        }`;
+        
+        notification.innerHTML = `
+            <div class="flex items-center">
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'} mr-2"></i>
+                <p class="text-sm">${message}</p>
+                <button onclick="this.closest('div').remove()" class="ml-4 text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // 5초 후 자동 제거
+        setTimeout(() => {
+            if (document.body.contains(notification)) {
+                notification.remove();
+            }
+        }, 5000);
     }
 }
 

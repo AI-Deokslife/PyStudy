@@ -279,22 +279,11 @@ for i in range(1, 4):
         
         try {
             let capturedOutput = '';
-            this.pyodide.setStdout({ 
-                batched: (str) => { 
-                    capturedOutput += str;
-                }
-            });
-            this.pyodide.setStderr({ 
-                batched: (str) => { 
-                    capturedOutput += str;
-                }
-            });
+            this.pyodide.setStdout({ batched: (str) => { capturedOutput += str + '\n'; } });
+            this.pyodide.setStderr({ batched: (str) => { capturedOutput += str + '\n'; } });
             
             await this.pyodide.runPythonAsync(code);
-            
-            // 빈 문자열이 아닌 경우만 출력, 맨 끝 줄바꿈만 제거
-            const result = capturedOutput ? capturedOutput.replace(/\n$/, '') : '실행이 완료되었습니다. (출력 없음)';
-            this.showOutput(result);
+            this.showOutput(capturedOutput.trim() || '실행이 완료되었습니다. (출력 없음)');
             
         } catch (err) {
             this.showOutput(`오류 발생:\n${err.toString()}`);
@@ -632,22 +621,11 @@ for i in range(1, 4):
         
         try {
             let capturedOutput = '';
-            this.pyodide.setStdout({ 
-                batched: (str) => { 
-                    capturedOutput += str;
-                }
-            });
-            this.pyodide.setStderr({ 
-                batched: (str) => { 
-                    capturedOutput += str;
-                }
-            });
+            this.pyodide.setStdout({ batched: (str) => { capturedOutput += str + '\n'; } });
+            this.pyodide.setStderr({ batched: (str) => { capturedOutput += str + '\n'; } });
             
             await this.pyodide.runPythonAsync(code);
-            
-            // 빈 문자열이 아닌 경우만 출력, 맨 끝 줄바꿈만 제거
-            const result = capturedOutput ? capturedOutput.replace(/\n$/, '') : '실행이 완료되었습니다. (출력 없음)';
-            output.textContent = result;
+            output.textContent = capturedOutput.trim() || '실행이 완료되었습니다. (출력 없음)';
             
         } catch (err) {
             output.textContent = `오류 발생:\n${err.toString()}`;

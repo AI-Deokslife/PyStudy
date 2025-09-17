@@ -627,20 +627,25 @@ class TeacherDashboard {
                         
                         <!-- 실행 결과 -->
                         <div class="grid grid-cols-1 gap-2">
-                            ${submission.output ? `
+                            ${submission.status === 'error' ? `
+                                <div class="bg-red-900 p-2 rounded">
+                                    <span class="text-red-300 text-xs">실행 결과:</span>
+                                    <pre class="text-red-200 text-sm mt-1">오류 발생</pre>
+                                    ${submission.error_message ? `<pre class="text-red-300 text-xs mt-1">${submission.error_message}</pre>` : ''}
+                                </div>
+                            ` : submission.output ? `
                                 <div class="bg-gray-700 p-2 rounded">
-                                    <span class="text-gray-400 text-xs">출력:</span>
+                                    <span class="text-gray-400 text-xs">실행 결과:</span>
                                     <pre class="text-gray-300 text-sm mt-1">${submission.output}</pre>
                                 </div>
-                            ` : ''}
-                            ${submission.error_message ? `
-                                <div class="bg-red-900 p-2 rounded">
-                                    <span class="text-red-300 text-xs">오류:</span>
-                                    <pre class="text-red-200 text-sm mt-1">${submission.error_message}</pre>
+                            ` : `
+                                <div class="bg-gray-700 p-2 rounded">
+                                    <span class="text-gray-400 text-xs">실행 결과:</span>
+                                    <pre class="text-gray-400 text-sm mt-1">출력이 없습니다.</pre>
                                 </div>
-                            ` : ''}
+                            `}
                             ${submission.execution_time ? `
-                                <p class="text-gray-400 text-xs">실행시간: ${submission.execution_time.toFixed(2)}ms</p>
+                                <p class="text-gray-400 text-xs">⏱️ 실행시간: ${submission.execution_time.toFixed(2)}ms</p>
                             ` : ''}
                         </div>
                     </div>

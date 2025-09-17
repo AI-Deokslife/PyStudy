@@ -279,14 +279,14 @@ for i in range(1, 4):
         
         try {
             let capturedOutput = '';
-            this.pyodide.setStdout({ batched: (str) => { capturedOutput += str + '\\n'; } });
-            this.pyodide.setStderr({ batched: (str) => { capturedOutput += str + '\\n'; } });
+            this.pyodide.setStdout({ batched: (str) => { capturedOutput += str; } });
+            this.pyodide.setStderr({ batched: (str) => { capturedOutput += str; } });
             
             await this.pyodide.runPythonAsync(code);
             this.showOutput(capturedOutput.trim() || '실행이 완료되었습니다. (출력 없음)');
             
         } catch (err) {
-            this.showOutput(`오류 발생:\\n${err.toString()}`);
+            this.showOutput(`오류 발생:\n${err.toString()}`);
         } finally {
             this.pyodide.setStdout();
             this.pyodide.setStderr();
@@ -460,7 +460,10 @@ for i in range(1, 4):
         const notification = document.getElementById('problem-notification');
         const titleElement = document.getElementById('problem-title');
         
-        titleElement.textContent = session.problem_title;
+        titleElement.innerHTML = `
+            <strong>${session.problem_title}</strong><br>
+            <small class="text-blue-300">출제자: ${session.teacher_name}</small>
+        `;
         notification.classList.remove('hidden');
         
         // 10초 후 자동으로 숨김
@@ -527,7 +530,12 @@ for i in range(1, 4):
                 <!-- 문제 정보 -->
                 <div class="border-b border-gray-700 pb-6 mb-6">
                     <div class="flex justify-between items-start mb-4">
-                        <h1 class="text-2xl font-bold text-white">${session.title}</h1>
+                        <div class="flex-1">
+                            <h1 class="text-2xl font-bold text-white">${session.title}</h1>
+                            <p class="text-gray-400 text-sm mt-1">
+                                <i class="fas fa-user-tie mr-1"></i>출제자: ${session.teacher_name}
+                            </p>
+                        </div>
                         <span class="px-3 py-1 bg-green-900 text-green-300 text-sm rounded">
                             <i class="fas fa-clock mr-1"></i>${session.time_limit}초
                         </span>
@@ -553,15 +561,18 @@ for i in range(1, 4):
                                       placeholder="여기에 코드를 작성하세요...">${session.initial_code || ''}</textarea>
                         </div>
                         
-                        <div class="flex gap-3">
+                        <div class="grid grid-cols-1 gap-3">
                             <button onclick="studentEnv.testProblemCode()" 
-                                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded">
-                                <i class="fas fa-play mr-2"></i>테스트 실행
+                                    class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition-colors">
+                                <i class="fas fa-play mr-2"></i>테스트 실행 (결과 미리보기)
                             </button>
                             <button onclick="studentEnv.submitProblemCode()" 
-                                    class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded">
-                                <i class="fas fa-paper-plane mr-2"></i>제출하기
+                                    class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition-colors">
+                                <i class="fas fa-paper-plane mr-2"></i>최종 제출하기
                             </button>
+                            <div class="text-xs text-gray-400 text-center">
+                                💡 테스트로 먼저 확인한 후 제출하세요
+                            </div>
                         </div>
                         
                         <div id="problem-result" class="hidden"></div>
@@ -610,14 +621,14 @@ for i in range(1, 4):
         
         try {
             let capturedOutput = '';
-            this.pyodide.setStdout({ batched: (str) => { capturedOutput += str + '\\n'; } });
-            this.pyodide.setStderr({ batched: (str) => { capturedOutput += str + '\\n'; } });
+            this.pyodide.setStdout({ batched: (str) => { capturedOutput += str; } });
+            this.pyodide.setStderr({ batched: (str) => { capturedOutput += str; } });
             
             await this.pyodide.runPythonAsync(code);
             output.textContent = capturedOutput.trim() || '실행이 완료되었습니다. (출력 없음)';
             
         } catch (err) {
-            output.textContent = `오류 발생:\\n${err.toString()}`;
+            output.textContent = `오류 발생:\n${err.toString()}`;
         } finally {
             this.pyodide.setStdout();
             this.pyodide.setStderr();
@@ -628,13 +639,47 @@ for i in range(1, 4):
         const code = document.getElementById('problem-code-editor').value;
         
         if (!code.trim()) {
-            alert('코드를 먼저 작성해주세요.');
+            this.showSubmitModal('오류', '코드를 먼저 작성해주세요.', 'error');
             return;
         }
         
-        if (!confirm('정말로 제출하시겠습니까?')) {
-            return;
-        }
+        // 제출 확인 모달 표시
+        this.showSubmitConfirmModal(code);
+    }
+    
+    showSubmitConfirmModal(code) {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center';
+        modal.innerHTML = `
+            <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md border border-gray-700">
+                <h3 class="text-xl font-bold mb-4 text-white">
+                    <i class="fas fa-paper-plane text-green-400 mr-2"></i>코드 제출 확인
+                </h3>
+                <p class="text-gray-300 mb-4">작성한 코드를 제출하시겠습니까?</p>
+                <div class="bg-gray-900 p-3 rounded mb-4">
+                    <p class="text-green-300 font-mono text-sm">${code.split('\\n').slice(0, 3).join('\\n')}${code.split('\\n').length > 3 ? '\\n...' : ''}</p>
+                </div>
+                <div class="bg-blue-900 border border-blue-700 p-3 rounded mb-4">
+                    <p class="text-blue-200 text-sm">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        제출하면 선생님이 실시간으로 확인할 수 있습니다.
+                    </p>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button onclick="this.parentElement.parentElement.parentElement.remove()" 
+                            class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md">취소</button>
+                    <button onclick="studentEnv.confirmSubmitProblemCode('${btoa(encodeURIComponent(code))}'); this.parentElement.parentElement.parentElement.remove();" 
+                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md">
+                        <i class="fas fa-check mr-2"></i>제출하기
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    async confirmSubmitProblemCode(encodedCode) {
+        const code = decodeURIComponent(atob(encodedCode));
         
         try {
             const response = await fetch('/api/student/submissions', {
@@ -655,34 +700,58 @@ for i in range(1, 4):
             resultDiv.classList.remove('hidden');
             
             if (response.ok) {
-                resultDiv.innerHTML = `
-                    <div class="p-4 bg-green-900 border border-green-700 rounded text-green-300">
-                        <i class="fas fa-check-circle mr-2"></i>제출이 완료되었습니다!
-                        <div class="mt-2 text-sm">
-                            <p>상태: ${this.getSubmissionStatusText(data.status)}</p>
-                            ${data.output ? `<p>출력: ${data.output}</p>` : ''}
-                            ${data.execution_time ? `<p>실행시간: ${data.execution_time.toFixed(2)}ms</p>` : ''}
-                        </div>
-                    </div>
-                `;
+                this.showSubmitModal('제출 완료!', 
+                    `코드가 성공적으로 제출되었습니다.<br>
+                     상태: ${this.getSubmissionStatusText(data.status)}<br>
+                     ${data.output ? `출력: ${data.output}<br>` : ''}
+                     ${data.execution_time ? `실행시간: ${data.execution_time.toFixed(2)}ms` : ''}`, 
+                    'success');
                 
                 // 제출 후 문제 새로고침
-                setTimeout(() => this.loadCurrentProblem(), 2000);
+                setTimeout(() => this.loadCurrentProblem(), 3000);
             } else {
-                resultDiv.innerHTML = `
-                    <div class="p-4 bg-red-900 border border-red-700 rounded text-red-300">
-                        <i class="fas fa-exclamation-triangle mr-2"></i>${data.error}
-                    </div>
-                `;
+                this.showSubmitModal('제출 실패', data.error, 'error');
             }
         } catch (error) {
-            const resultDiv = document.getElementById('problem-result');
-            resultDiv.classList.remove('hidden');
-            resultDiv.innerHTML = `
-                <div class="p-4 bg-red-900 border border-red-700 rounded text-red-300">
-                    <i class="fas fa-exclamation-triangle mr-2"></i>제출 중 오류가 발생했습니다.
+            this.showSubmitModal('오류', '제출 중 오류가 발생했습니다.', 'error');
+        }
+    }
+    
+    showSubmitModal(title, message, type) {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center';
+        
+        const iconClass = type === 'success' ? 'fas fa-check-circle text-green-400' : 
+                         type === 'error' ? 'fas fa-exclamation-triangle text-red-400' : 
+                         'fas fa-info-circle text-blue-400';
+        
+        const bgClass = type === 'success' ? 'bg-green-800 border-green-600' : 
+                       type === 'error' ? 'bg-red-800 border-red-600' : 
+                       'bg-blue-800 border-blue-600';
+        
+        modal.innerHTML = `
+            <div class="${bgClass} p-6 rounded-lg shadow-xl border">
+                <div class="text-center">
+                    <i class="${iconClass} text-4xl mb-4"></i>
+                    <h3 class="text-xl font-bold text-white mb-2">${title}</h3>
+                    <p class="text-gray-200 mb-4">${message}</p>
+                    <button onclick="this.parentElement.parentElement.parentElement.remove()" 
+                            class="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded">
+                        확인
+                    </button>
                 </div>
-            `;
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // 성공 시 3초 후 자동 닫기
+        if (type === 'success') {
+            setTimeout(() => {
+                if (document.body.contains(modal)) {
+                    modal.remove();
+                }
+            }, 3000);
         }
     }
     

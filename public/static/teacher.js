@@ -332,11 +332,68 @@ class TeacherDashboard {
     }
     
     async startSession(problemId, problemTitle) {
-        const title = prompt(`세션 제목을 입력하세요:`, problemTitle);
-        if (!title) return;
+        // 더 나은 UI로 입력 받기
+        this.showSessionStartModal(problemId, problemTitle);
+    }
+    
+    showSessionStartModal(problemId, problemTitle) {
+        const mainContent = document.getElementById('main-content');
+        const existingModal = document.getElementById('session-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
         
-        const classId = prompt(`클래스 ID를 입력하세요:`, 'CS101');
-        if (!classId) return;
+        const modal = document.createElement('div');
+        modal.id = 'session-modal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center';
+        modal.innerHTML = `
+            <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md border border-gray-700">
+                <h3 class="text-xl font-bold mb-4 text-white">문제 세션 시작</h3>
+                <p class="text-gray-400 mb-4 text-sm">문제: <strong class="text-white">${problemTitle}</strong></p>
+                
+                <form id="session-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">세션 제목</label>
+                        <input type="text" id="session-title" value="${problemTitle}" required
+                               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">클래스 ID</label>
+                        <input type="text" id="session-class" value="CS101" required
+                               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                    </div>
+                    
+                    <div class="flex justify-end gap-3 pt-4">
+                        <button type="button" onclick="document.getElementById('session-modal').remove()" 
+                                class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md">취소</button>
+                        <button type="submit" 
+                                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md">
+                            <i class="fas fa-play mr-2"></i>세션 시작
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        document.getElementById('session-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const title = document.getElementById('session-title').value.trim();
+            const classId = document.getElementById('session-class').value.trim();
+            
+            if (title && classId) {
+                this.createSession(problemId, title, classId);
+                modal.remove();
+            }
+        });
+        
+        // 첫 번째 입력 필드에 포커스
+        setTimeout(() => document.getElementById('session-title').focus(), 100);
+    }
+    
+    async createSession(problemId, title, classId) {
         
         try {
             const response = await fetch('/api/teacher/sessions', {
@@ -355,8 +412,30 @@ class TeacherDashboard {
             const data = await response.json();
             
             if (response.ok) {
-                alert('세션이 시작되었습니다!');
-                this.showLiveSession();
+                // 성공 알림과 함께 실시간 세션으로 이동
+                const successModal = document.createElement('div');
+                successModal.className = 'fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center';
+                successModal.innerHTML = `
+                    <div class="bg-green-800 p-6 rounded-lg shadow-xl border border-green-600">
+                        <div class="text-center">
+                            <i class="fas fa-check-circle text-4xl text-green-300 mb-4"></i>
+                            <h3 class="text-xl font-bold text-white mb-2">세션이 시작되었습니다!</h3>
+                            <p class="text-green-200 mb-4">${title}</p>
+                            <p class="text-green-300 text-sm mb-4">학생들에게 알림이 전송되었습니다.</p>
+                            <button onclick="this.parentElement.parentElement.parentElement.remove(); teacherDashboard.showLiveSession();" 
+                                    class="bg-green-600 hover:bg-green-700 px-6 py-2 rounded text-white">
+                                실시간 모니터링 시작
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(successModal);
+                
+                // 3초 후 자동으로 실시간 세션으로 이동
+                setTimeout(() => {
+                    successModal.remove();
+                    this.showLiveSession();
+                }, 3000);
             } else {
                 alert(`세션 시작 실패: ${data.error}`);
             }
@@ -451,6 +530,9 @@ class TeacherDashboard {
                             <span class="ml-2 px-2 py-1 bg-green-700 text-green-100 text-xs rounded">활성</span>
                         </div>
                         <p class="text-green-200 mb-2">${session.problem_title}</p>
+                        <p class="text-green-300 text-sm">
+                            출제자: ${session.teacher_name || '나'}
+                        </p>
                         <p class="text-green-300 text-sm">
                             시작 시간: ${new Date(session.start_time).toLocaleString('ko-KR')}
                         </p>

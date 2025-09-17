@@ -21,9 +21,11 @@ student.get('/sessions/active', async (c) => {
 
     const sessions = await c.env.DB.prepare(`
       SELECT ps.*, p.title as problem_title, p.description as problem_description, 
-             p.initial_code, p.expected_output, p.time_limit
+             p.initial_code, p.expected_output, p.time_limit,
+             u.full_name as teacher_name
       FROM problem_sessions ps
       JOIN problems p ON ps.problem_id = p.id
+      JOIN users u ON ps.teacher_id = u.id
       WHERE ps.class_id = ? AND ps.status = 'active'
       ORDER BY ps.start_time DESC
     `).bind(user.class_id).all();
@@ -55,9 +57,11 @@ student.get('/sessions/:id', async (c) => {
 
     const session = await c.env.DB.prepare(`
       SELECT ps.*, p.title as problem_title, p.description as problem_description, 
-             p.initial_code, p.expected_output, p.time_limit, p.test_cases
+             p.initial_code, p.expected_output, p.time_limit, p.test_cases,
+             u.full_name as teacher_name
       FROM problem_sessions ps
       JOIN problems p ON ps.problem_id = p.id
+      JOIN users u ON ps.teacher_id = u.id
       WHERE ps.id = ? AND ps.class_id = ?
     `).bind(sessionId, user.class_id).first();
 

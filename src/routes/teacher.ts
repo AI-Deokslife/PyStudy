@@ -123,9 +123,11 @@ teacher.get('/sessions/active', async (c) => {
     const payload = JSON.parse(atob(token!.split('.')[1]));
 
     const sessions = await c.env.DB.prepare(`
-      SELECT ps.*, p.title as problem_title, p.description as problem_description
+      SELECT ps.*, p.title as problem_title, p.description as problem_description,
+             u.full_name as teacher_name
       FROM problem_sessions ps
       JOIN problems p ON ps.problem_id = p.id
+      JOIN users u ON ps.teacher_id = u.id
       WHERE ps.teacher_id = ? AND ps.status = 'active'
       ORDER BY ps.start_time DESC
     `).bind(payload.userId).all();

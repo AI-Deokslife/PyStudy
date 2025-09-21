@@ -1,20 +1,20 @@
--- 기본 관리자 계정 생성 (비밀번호: admin123)
+-- 기본 관리자 계정 생성 (비밀번호: admin123) - 평문 저장
 INSERT OR IGNORE INTO users (username, password_hash, full_name, role) VALUES 
-  ('admin', '$2a$10$rOZl.3YZwz0m1YFfzI5g8eF7d1zUb8nPvEMQVT9DKHMo5m6G3Lm1K', '시스템 관리자', 'admin');
+  ('admin', 'admin123', '시스템 관리자', 'admin');
 
--- 기본 교사 계정 생성 (비밀번호: teacher123)
+-- 기본 교사 계정 생성 (비밀번호: teacher123) - 평문 저장
 INSERT OR IGNORE INTO users (username, password_hash, full_name, role, email) VALUES 
-  ('teacher1', '$2a$10$rOZl.3YZwz0m1YFfzI5g8eF7d1zUb8nPvEMQVT9DKHMo5m6G3Lm1K', '이은덕 선생님', 'teacher', 'teacher1@school.edu');
+  ('teacher1', 'teacher123', '이은덕 선생님', 'teacher', 'teacher1@school.edu');
 
 -- 기본 클래스 생성
 INSERT OR IGNORE INTO classes (id, name, description, teacher_id) VALUES 
   ('CS101', '파이썬 기초', '파이썬 프로그래밍 기초 과정', 2);
 
--- 테스트 학생 계정 생성 (비밀번호: student123)
+-- 테스트 학생 계정 생성 (비밀번호: student123) - 평문 저장
 INSERT OR IGNORE INTO users (username, password_hash, full_name, role, class_id) VALUES 
-  ('student1', '$2a$10$rOZl.3YZwz0m1YFfzI5g8eF7d1zUb8nPvEMQVT9DKHMo5m6G3Lm1K', '김학생', 'student', 'CS101'),
-  ('student2', '$2a$10$rOZl.3YZwz0m1YFfzI5g8eF7d1zUb8nPvEMQVT9DKHMo5m6G3Lm1K', '박학생', 'student', 'CS101'),
-  ('student3', '$2a$10$rOZl.3YZwz0m1YFfzI5g8eF7d1zUb8nPvEMQVT9DKHMo5m6G3Lm1K', '최학생', 'student', 'CS101');
+  ('student1', 'student123', '김학생', 'student', 'CS101'),
+  ('student2', 'student123', '박학생', 'student', 'CS101'),
+  ('student3', 'student123', '최학생', 'student', 'CS101');
 
 -- 기본 문제 생성
 INSERT OR IGNORE INTO problems (title, description, initial_code, expected_output, test_cases, created_by) VALUES 

@@ -22,23 +22,16 @@ auth.post('/login', async (c) => {
       return c.json({ error: '사용자를 찾을 수 없습니다.' }, 401);
     }
 
-    // 비밀번호 확인 (하이브리드 방식: 테스트 계정은 평문, 새 계정은 해시)
+    // 비밀번호 확인 (하이브리드 방식: 해시 우선, 실패시 평문 비교)
     let isValidPassword = false;
     
-    // 테스트 계정들은 평문 비밀번호 확인
-    if (user.username === 'admin' && password === 'admin123') {
-      isValidPassword = true;
-    } else if (user.username === 'teacher1' && password === 'teacher123') {
-      isValidPassword = true;
-    } else if (user.username === 'student1' && password === 'student123') {
-      isValidPassword = true;
-    } else if (user.username === 'student2' && password === 'student123') {
-      isValidPassword = true;
-    } else if (user.username === 'student3' && password === 'student123') {
-      isValidPassword = true;
-    } else {
-      // 새로 생성된 계정들은 해시 비교
+    // 먼저 해시된 비밀번호 확인 시도
+    if (user.password_hash && user.password_hash.startsWith('$2a$')) {
+      // bcrypt 해시인 경우 해시 비교
       isValidPassword = await verifyPassword(password, user.password_hash);
+    } else {
+      // 평문 비밀번호인 경우 직접 비교 (테스트 계정)
+      isValidPassword = (password === user.password_hash);
     }
     
     if (!isValidPassword) {

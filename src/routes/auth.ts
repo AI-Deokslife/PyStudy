@@ -32,6 +32,10 @@ auth.post('/login', async (c) => {
       isValidPassword = true;
     } else if (user.username === 'student1' && password === 'student123') {
       isValidPassword = true;
+    } else if (user.username === 'student2' && password === 'student123') {
+      isValidPassword = true;
+    } else if (user.username === 'student3' && password === 'student123') {
+      isValidPassword = true;
     } else {
       // 새로 생성된 계정들은 해시 비교
       isValidPassword = await verifyPassword(password, user.password_hash);

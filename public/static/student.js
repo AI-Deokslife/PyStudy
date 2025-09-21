@@ -1056,6 +1056,11 @@ for i in range(1, 4):
         const reason = document.getElementById('delete-reason').value;
         const modal = document.querySelector('.fixed');
         
+        // 먼저 모달을 닫고 API 호출
+        if (modal) {
+            modal.remove();
+        }
+        
         try {
             const response = await fetch(`/api/student/submissions/${submissionId}/delete-request`, {
                 method: 'POST',
@@ -1082,11 +1087,6 @@ for i in range(1, 4):
         } catch (error) {
             console.error('Delete request error:', error);
             this.showNotificationModal('error', '오류 발생', '서버 연결에 실패했습니다.');
-        }
-        
-        // 모달 닫기
-        if (modal) {
-            modal.remove();
         }
     }
     

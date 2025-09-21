@@ -116,6 +116,12 @@ class AdminDashboard {
                         </button>
                     </li>
                     <li>
+                        <button onclick="adminDashboard.showClassManagement(); adminDashboard.closeMobileMenu();" 
+                                class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
+                            <i class="fas fa-school mr-3"></i>클래스 관리
+                        </button>
+                    </li>
+                    <li>
                         <button onclick="adminDashboard.showBulkUserCreate(); adminDashboard.closeMobileMenu();" 
                                 class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
                             <i class="fas fa-file-excel mr-3"></i>엑셀로 계정 생성
@@ -1051,6 +1057,526 @@ class AdminDashboard {
         setTimeout(() => {
             messageDiv.classList.add('hidden');
         }, 5000);
+    }
+    
+    // 클래스 관리 화면 표시
+    async showClassManagement() {
+        const mainContent = document.getElementById('main-content');
+        mainContent.innerHTML = `
+            <div class="bg-gray-800 rounded-lg shadow-xl p-4 md:p-6">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                    <h2 class="text-xl md:text-2xl font-bold text-white">
+                        <i class="fas fa-school mr-2 text-blue-400"></i>클래스 관리
+                    </h2>
+                    <button onclick="adminDashboard.showCreateClassForm()" 
+                            class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white text-sm md:text-base w-full sm:w-auto">
+                        <i class="fas fa-plus mr-2"></i>클래스 추가
+                    </button>
+                </div>
+                
+                <div id="classes-table">
+                    <div class="text-center py-8">
+                        <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
+                        <p class="text-gray-400 mt-2">클래스 목록을 불러오는 중...</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        await this.loadClasses();
+    }
+    
+    async loadClasses() {
+        try {
+            const response = await fetch('/api/admin/classes', {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.renderClassesTable(data.classes);
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (error) {
+            document.getElementById('classes-table').innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-exclamation-triangle text-2xl text-red-400"></i>
+                    <p class="text-red-400 mt-2">클래스 목록을 불러오는데 실패했습니다.</p>
+                </div>
+            `;
+        }
+    }
+    
+    renderClassesTable(classes) {
+        const classesTable = document.getElementById('classes-table');
+        
+        if (classes.length === 0) {
+            classesTable.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-school text-2xl text-gray-400"></i>
+                    <p class="text-gray-400 mt-2">등록된 클래스가 없습니다.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // 데스크톱 테이블 (md 이상에서 표시)
+        classesTable.innerHTML = `
+            <!-- 데스크톱 테이블 -->
+            <div class="hidden md:block overflow-x-auto">
+                <table class="min-w-full bg-gray-700 rounded-lg overflow-hidden">
+                    <thead class="bg-gray-600">
+                        <tr>
+                            <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">클래스 ID</th>
+                            <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">클래스명</th>
+                            <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">담당 교사</th>
+                            <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">학생 수</th>
+                            <th class="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">생성일</th>
+                            <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">작업</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-600">
+                        ${classes.map(classItem => `
+                            <tr class="hover:bg-gray-600">
+                                <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-blue-300 font-mono">${classItem.id}</td>
+                                <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-white font-semibold">${classItem.name}</td>
+                                <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                    ${classItem.teacher_name ? classItem.teacher_name + ' 선생님' : '담당 교사 없음'}
+                                </td>
+                                <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                    <span class="px-2 py-1 bg-blue-900 text-blue-200 rounded-full text-xs">
+                                        ${classItem.student_count}명
+                                    </span>
+                                </td>
+                                <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-300">${this.formatKoreanDate(classItem.created_at)}</td>
+                                <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                    <div class="flex space-x-2">
+                                        <button onclick="adminDashboard.showEditClassForm('${classItem.id}')" 
+                                                class="text-blue-400 hover:text-blue-300" title="수정">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button onclick="adminDashboard.deleteClass('${classItem.id}')" 
+                                                class="text-red-400 hover:text-red-300" title="삭제">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 모바일 카드 뷰 (md 미만에서 표시) -->
+            <div class="md:hidden space-y-4">
+                ${classes.map(classItem => `
+                    <div class="bg-gray-700 rounded-lg p-4 border border-gray-600">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-blue-300 font-mono text-sm">${classItem.id}</span>
+                                    <span class="px-2 py-1 bg-blue-900 text-blue-200 rounded-full text-xs">
+                                        ${classItem.student_count}명
+                                    </span>
+                                </div>
+                                <h3 class="text-white font-medium text-lg">${classItem.name}</h3>
+                                <p class="text-gray-300 text-sm">
+                                    ${classItem.teacher_name ? classItem.teacher_name + ' 선생님' : '담당 교사 없음'}
+                                </p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="adminDashboard.showEditClassForm('${classItem.id}')" 
+                                        class="p-2 text-blue-400 hover:text-blue-300 hover:bg-gray-600 rounded" title="수정">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="adminDashboard.deleteClass('${classItem.id}')" 
+                                        class="p-2 text-red-400 hover:text-red-300 hover:bg-gray-600 rounded" title="삭제">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-gray-300 text-sm">
+                            <i class="fas fa-calendar mr-2 w-4"></i>
+                            <span>생성일: ${this.formatKoreanDate(classItem.created_at)}</span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+    
+    showCreateClassForm() {
+        const mainContent = document.getElementById('main-content');
+        mainContent.innerHTML = `
+            <div class="bg-gray-800 rounded-lg shadow-xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-white">
+                        <i class="fas fa-plus-circle mr-2 text-green-400"></i>클래스 추가
+                    </h2>
+                    <button onclick="adminDashboard.showClassManagement()" 
+                            class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded text-white">
+                        <i class="fas fa-arrow-left mr-2"></i>뒤로가기
+                    </button>
+                </div>
+                
+                <div class="mb-6 p-4 bg-blue-900 border border-blue-700 rounded-md">
+                    <div class="flex items-start">
+                        <i class="fas fa-info-circle text-blue-400 mr-2 mt-0.5"></i>
+                        <div class="text-sm text-blue-200">
+                            <p class="font-semibold mb-1">클래스 생성 안내:</p>
+                            <ul class="list-disc list-inside space-y-1 text-xs">
+                                <li><strong>클래스 ID:</strong> 학생 로그인용 식별자 (한글/영문/숫자/특수문자 모두 가능, 생성 후 변경 불가)</li>
+                                <li><strong>클래스명:</strong> 화면 표시용 이름 (자유롭게 변경 가능)</li>
+                                <li><strong>담당 교사:</strong> 선택사항이며, 나중에 변경할 수 있습니다</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <form id="create-class-form" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">
+                                <i class="fas fa-tag mr-1"></i>클래스 ID
+                            </label>
+                            <input type="text" name="id" required 
+                                   placeholder="예: 1학년A반, 파이썬기초, coding2024"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500">
+                            <p class="text-xs text-green-400 mt-1">✅ 한글, 영문, 숫자, 특수문자 모두 사용 가능 (학생 로그인 ID)</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">
+                                <i class="fas fa-graduation-cap mr-1"></i>클래스명 (표시용)
+                            </label>
+                            <input type="text" name="name" required 
+                                   placeholder="예: 1학년 A반, 파이썬 기초반, 수학 심화반"
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500">
+                            <p class="text-xs text-gray-400 mt-1">한글, 영문, 숫자 모두 사용 가능</p>
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">
+                                <i class="fas fa-chalkboard-teacher mr-1"></i>담당 교사 (선택)
+                            </label>
+                            <select name="teacher_id" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500">
+                                <option value="">담당 교사 없음</option>
+                                <!-- 교사 목록은 로딩 후 채워짐 -->
+                            </select>
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">
+                                <i class="fas fa-align-left mr-1"></i>설명 (선택)
+                            </label>
+                            <textarea name="description" rows="3" 
+                                      placeholder="클래스에 대한 간단한 설명을 입력하세요"
+                                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500"></textarea>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">
+                        <i class="fas fa-plus mr-2"></i>클래스 생성
+                    </button>
+                </form>
+                
+                <div id="create-class-result" class="mt-4 hidden"></div>
+            </div>
+        `;
+        
+        // 교사 목록 로드
+        this.loadTeachersForClassForm();
+        
+        document.getElementById('create-class-form').addEventListener('submit', this.handleCreateClass.bind(this));
+    }
+    
+    async loadTeachersForClassForm() {
+        try {
+            const response = await fetch('/api/admin/users', {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                const teachers = data.users.filter(user => user.role === 'teacher');
+                const teacherSelect = document.querySelector('select[name="teacher_id"]');
+                
+                teachers.forEach(teacher => {
+                    const option = document.createElement('option');
+                    option.value = teacher.id;
+                    option.textContent = `${teacher.full_name} 선생님 (@${teacher.username})`;
+                    teacherSelect.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Failed to load teachers:', error);
+        }
+    }
+    
+    async handleCreateClass(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const classData = Object.fromEntries(formData.entries());
+        
+        // 빈 값 제거
+        if (!classData.teacher_id) delete classData.teacher_id;
+        if (!classData.description) delete classData.description;
+        
+        try {
+            const response = await fetch('/api/admin/classes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify(classData)
+            });
+            
+            const data = await response.json();
+            
+            const resultDiv = document.getElementById('create-class-result');
+            resultDiv.classList.remove('hidden');
+            
+            if (response.ok) {
+                resultDiv.innerHTML = `
+                    <div class="p-3 bg-green-900 border border-green-700 rounded-md text-green-300">
+                        <i class="fas fa-check-circle mr-2"></i>클래스가 성공적으로 생성되었습니다.
+                    </div>
+                `;
+                e.target.reset();
+                setTimeout(() => this.showClassManagement(), 2000);
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="p-3 bg-red-900 border border-red-700 rounded-md text-red-300">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>${data.error}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            const resultDiv = document.getElementById('create-class-result');
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerHTML = `
+                <div class="p-3 bg-red-900 border border-red-700 rounded-md text-red-300">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>클래스 생성 중 오류가 발생했습니다.
+                </div>
+            `;
+        }
+    }
+    
+    async showEditClassForm(classId) {
+        try {
+            // 클래스 정보 가져오기
+            const response = await fetch('/api/admin/classes', {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error);
+            }
+            
+            const classItem = data.classes.find(c => c.id === classId);
+            if (!classItem) {
+                alert('클래스를 찾을 수 없습니다.');
+                return;
+            }
+            
+            const mainContent = document.getElementById('main-content');
+            mainContent.innerHTML = `
+                <div class="bg-gray-800 rounded-lg shadow-xl p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-white">
+                            <i class="fas fa-edit mr-2 text-yellow-400"></i>클래스 수정 (ID: ${classItem.id})
+                        </h2>
+                        <button onclick="adminDashboard.showClassManagement()" 
+                                class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded text-white">
+                            <i class="fas fa-arrow-left mr-2"></i>뒤로가기
+                        </button>
+                    </div>
+                    
+                    <form id="edit-class-form" class="space-y-6">
+                        <input type="hidden" name="original_class_id" value="${classItem.id}">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">
+                                    <i class="fas fa-tag mr-1"></i>클래스 ID (변경 불가)
+                                </label>
+                                <input type="text" value="${classItem.id}" disabled 
+                                       class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-gray-400 cursor-not-allowed">
+                                <input type="hidden" name="id" value="${classItem.id}">
+                                <p class="text-xs text-yellow-400 mt-1">⚠️ 클래스 ID는 학생 로그인용이므로 변경할 수 없습니다</p>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">
+                                    <i class="fas fa-graduation-cap mr-1"></i>클래스명 (표시용)
+                                </label>
+                                <input type="text" name="name" value="${classItem.name}" required 
+                                       placeholder="예: 1학년 A반, 파이썬 기초반"
+                                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500">
+                                <p class="text-xs text-green-400 mt-1">✅ 한글/영문 자유롭게 변경 가능 (로그인에 영향 없음)</p>
+                            </div>
+                            
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-300 mb-2">
+                                    <i class="fas fa-chalkboard-teacher mr-1"></i>담당 교사
+                                </label>
+                                <select name="teacher_id" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500">
+                                    <option value="">담당 교사 없음</option>
+                                    <!-- 교사 목록은 로딩 후 채워짐 -->
+                                </select>
+                            </div>
+                            
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-300 mb-2">
+                                    <i class="fas fa-align-left mr-1"></i>설명
+                                </label>
+                                <textarea name="description" rows="3" 
+                                          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-2 focus:ring-blue-500">${classItem.description || ''}</textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-4">
+                            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">
+                                <i class="fas fa-save mr-2"></i>수정 저장
+                            </button>
+                            <button type="button" onclick="adminDashboard.showClassManagement()" 
+                                    class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded">
+                                <i class="fas fa-times mr-2"></i>취소
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div id="edit-class-result" class="mt-4 hidden"></div>
+                </div>
+            `;
+            
+            // 교사 목록 로드 및 현재 교사 선택
+            await this.loadTeachersForEditForm(classItem.teacher_id);
+            
+            document.getElementById('edit-class-form').addEventListener('submit', this.handleEditClass.bind(this));
+            
+        } catch (error) {
+            alert('클래스 정보를 불러오는데 실패했습니다.');
+        }
+    }
+    
+    async loadTeachersForEditForm(currentTeacherId) {
+        try {
+            const response = await fetch('/api/admin/users', {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                const teachers = data.users.filter(user => user.role === 'teacher');
+                const teacherSelect = document.querySelector('select[name="teacher_id"]');
+                
+                teachers.forEach(teacher => {
+                    const option = document.createElement('option');
+                    option.value = teacher.id;
+                    option.textContent = `${teacher.full_name} 선생님 (@${teacher.username})`;
+                    if (teacher.id == currentTeacherId) {
+                        option.selected = true;
+                    }
+                    teacherSelect.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Failed to load teachers:', error);
+        }
+    }
+    
+    async handleEditClass(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const classData = Object.fromEntries(formData.entries());
+        const originalClassId = classData.original_class_id;
+        
+        // original_class_id는 API 요청에서 제외
+        delete classData.original_class_id;
+        
+        // 빈 값 제거
+        if (!classData.teacher_id) delete classData.teacher_id;
+        if (!classData.description) delete classData.description;
+        
+        try {
+            const response = await fetch(`/api/admin/classes/${originalClassId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify(classData)
+            });
+            
+            const data = await response.json();
+            
+            const resultDiv = document.getElementById('edit-class-result');
+            resultDiv.classList.remove('hidden');
+            
+            if (response.ok) {
+                resultDiv.innerHTML = `
+                    <div class="p-3 bg-green-900 border border-green-700 rounded-md text-green-300">
+                        <i class="fas fa-check-circle mr-2"></i>클래스 정보가 성공적으로 수정되었습니다.
+                    </div>
+                `;
+                setTimeout(() => this.showClassManagement(), 2000);
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="p-3 bg-red-900 border border-red-700 rounded-md text-red-300">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>${data.error}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            const resultDiv = document.getElementById('edit-class-result');
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerHTML = `
+                <div class="p-3 bg-red-900 border border-red-700 rounded-md text-red-300">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>클래스 수정 중 오류가 발생했습니다.
+                </div>
+            `;
+        }
+    }
+    
+    async deleteClass(classId) {
+        if (!confirm('정말로 이 클래스를 삭제하시겠습니까?\n\n주의: 이 클래스에 속한 학생들은 로그인할 수 없게 됩니다.')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/admin/classes/${classId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            if (response.ok) {
+                this.loadClasses(); // 클래스 목록 새로고침
+            } else {
+                const data = await response.json();
+                alert(`삭제 실패: ${data.error}`);
+            }
+        } catch (error) {
+            alert('클래스 삭제 중 오류가 발생했습니다.');
+        }
     }
 }
 

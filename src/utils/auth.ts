@@ -3,6 +3,31 @@ import { JWTPayload } from '../types';
 // 간단한 JWT 구현 (실제 환경에서는 더 안전한 구현 필요)
 const JWT_SECRET = 'your-secret-key-change-in-production';
 
+// UTF-8 안전한 Base64 인코딩 함수
+function utf8ToBase64(str: string): string {
+  // UTF-8 문자열을 Uint8Array로 변환
+  const encoder = new TextEncoder();
+  const uint8Array = encoder.encode(str);
+  
+  // Uint8Array를 Base64로 변환
+  let binary = '';
+  uint8Array.forEach(byte => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary);
+}
+
+// UTF-8 안전한 Base64 디코딩 함수
+function base64ToUtf8(base64: string): string {
+  const binary = atob(base64);
+  const uint8Array = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    uint8Array[i] = binary.charCodeAt(i);
+  }
+  const decoder = new TextDecoder();
+  return decoder.decode(uint8Array);
+}
+
 export function createToken(payload: JWTPayload): string {
   const header = { alg: 'HS256', typ: 'JWT' };
   const now = Math.floor(Date.now() / 1000);
@@ -12,8 +37,8 @@ export function createToken(payload: JWTPayload): string {
     exp: now + (24 * 60 * 60) // 24시간 만료
   };
 
-  const encodedHeader = btoa(JSON.stringify(header));
-  const encodedPayload = btoa(JSON.stringify(tokenPayload));
+  const encodedHeader = utf8ToBase64(JSON.stringify(header));
+  const encodedPayload = utf8ToBase64(JSON.stringify(tokenPayload));
   
   // 간단한 서명 생성 (실제로는 HMAC-SHA256 사용 권장)
   const signature = btoa(`${encodedHeader}.${encodedPayload}.${JWT_SECRET}`);
@@ -32,7 +57,7 @@ export function verifyToken(token: string): JWTPayload | null {
     const expectedSignature = btoa(`${encodedHeader}.${encodedPayload}.${JWT_SECRET}`);
     if (signature !== expectedSignature) return null;
 
-    const payload = JSON.parse(atob(encodedPayload));
+    const payload = JSON.parse(base64ToUtf8(encodedPayload));
     
     // 만료 시간 확인
     if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {

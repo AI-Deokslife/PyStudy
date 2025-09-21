@@ -69,24 +69,34 @@ class TeacherDashboard {
         const app = document.getElementById('app');
         app.innerHTML = `
             <!-- 모바일 메뉴 토글 버튼 -->
-            <button id="mobile-menu-toggle" class="md:hidden fixed top-4 left-4 z-50 bg-gray-700 hover:bg-gray-600 p-2 rounded-lg">
+            <button id="mobile-menu-toggle" class="md:hidden fixed top-4 left-4 z-50 bg-emerald-600 hover:bg-emerald-700 p-3 rounded-lg shadow-lg">
                 <i class="fas fa-bars text-white"></i>
             </button>
             
             <!-- 모바일 오버레이 -->
             <div id="mobile-overlay" class="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30 hidden"></div>
             
-            <header class="bg-gray-800 shadow-lg sticky top-0 z-40">
+            <header class="gradient-header shadow-lg sticky top-0 z-40">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between items-center h-16">
                         <div class="flex items-center">
                             <div class="md:hidden w-8"></div> <!-- 모바일 메뉴 버튼 공간 확보 -->
-                            <i class="fas fa-chalkboard-teacher text-xl md:text-2xl text-blue-400 mr-2 md:mr-3"></i>
-                            <h1 class="text-lg md:text-xl font-semibold text-white">교사 대시보드</h1>
+                            <div class="flex items-center">
+                                <div class="bg-white bg-opacity-20 rounded-full p-2 mr-3">
+                                    <i class="fas fa-graduation-cap text-xl md:text-2xl text-white"></i>
+                                </div>
+                                <div>
+                                    <h1 class="text-lg md:text-xl font-bold text-white">EunPyeong Python Education</h1>
+                                    <div class="text-xs text-emerald-100 hidden sm:block">교사 대시보드</div>
+                                </div>
+                            </div>
                         </div>
                         <div class="flex items-center space-x-2 md:space-x-4">
-                            <span class="text-gray-300 text-sm md:text-base hidden sm:inline">${this.user.full_name} 선생님</span>
-                            <button onclick="teacherDashboard.logout()" class="bg-red-600 hover:bg-red-700 px-2 md:px-4 py-2 rounded text-white text-sm md:text-base">
+                            <div class="hidden sm:flex items-center bg-white bg-opacity-20 rounded-full px-3 py-1">
+                                <i class="fas fa-user-circle text-white mr-2"></i>
+                                <span class="text-white text-sm md:text-base">${this.user.full_name} 선생님</span>
+                            </div>
+                            <button onclick="teacherDashboard.logout()" class="bg-red-500 hover:bg-red-600 px-3 md:px-4 py-2 rounded-lg text-white text-sm md:text-base transition-colors shadow-lg">
                                 <i class="fas fa-sign-out-alt mr-1 md:mr-2"></i><span class="hidden sm:inline">로그아웃</span>
                             </button>
                         </div>
@@ -94,9 +104,9 @@ class TeacherDashboard {
                 </div>
             </header>
             
-            <div class="flex min-h-screen bg-gray-900">
+            <div class="flex min-h-screen bg-gray-50">
                 <!-- 데스크톱 사이드바 -->
-                <nav id="sidebar" class="hidden md:block w-64 bg-gray-800 shadow-lg">
+                <nav id="sidebar" class="hidden md:block w-72 bg-white shadow-xl border-r border-gray-200">
                     <!-- 네비게이션 메뉴 -->
                 </nav>
                 
@@ -105,7 +115,7 @@ class TeacherDashboard {
                     <!-- 네비게이션 메뉴 (모바일) -->
                 </nav>
                 
-                <main id="main-content" class="flex-1 p-4 md:p-6 w-full md:w-auto">
+                <main id="main-content" class="flex-1 p-6 bg-gray-50 overflow-y-auto">
                     <!-- 메인 콘텐츠 -->
                 </main>
             </div>
@@ -114,45 +124,120 @@ class TeacherDashboard {
     
     renderNavigation() {
         const navigationHTML = `
-            <div class="p-4 md:p-6">
+            <!-- 프로필 섹션 -->
+            <div class="p-6 border-b border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="bg-emerald-100 rounded-full p-3 mr-4">
+                            <i class="fas fa-user-tie text-emerald-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-gray-800">${this.user.full_name}</div>
+                            <div class="text-sm text-emerald-600">교사</div>
+                        </div>
+                    </div>
+                    <button onclick="teacherDashboard.showProfileEditModal();" 
+                            class="text-gray-400 hover:text-emerald-600 transition-colors">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-4">
                 <ul class="space-y-2">
                     <li>
                         <button onclick="teacherDashboard.showProblemManagement(); teacherDashboard.closeMobileMenu();" 
-                                class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
-                            <i class="fas fa-tasks mr-3"></i>문제 관리
+                                class="nav-item w-full text-left flex items-center px-4 py-3 text-gray-700 rounded-lg transition-all">
+                            <div class="bg-blue-100 p-2 rounded-lg mr-3">
+                                <i class="fas fa-puzzle-piece text-blue-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium">문제 관리</div>
+                                <div class="text-xs text-gray-500">문제 생성 및 편집</div>
+                            </div>
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="teacherDashboard.showClassManagement(); teacherDashboard.closeMobileMenu();" 
+                                class="nav-item w-full text-left flex items-center px-4 py-3 text-gray-700 rounded-lg transition-all">
+                            <div class="bg-green-100 p-2 rounded-lg mr-3">
+                                <i class="fas fa-users text-emerald-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium">클래스 관리</div>
+                                <div class="text-xs text-gray-500">학생 그룹 관리</div>
+                            </div>
                         </button>
                     </li>
                     <li>
                         <button onclick="teacherDashboard.showLiveSession(); teacherDashboard.closeMobileMenu();" 
-                                class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
-                            <i class="fas fa-broadcast-tower mr-3"></i>실시간 세션
+                                class="nav-item w-full text-left flex items-center px-4 py-3 text-gray-700 rounded-lg transition-all">
+                            <div class="bg-red-100 p-2 rounded-lg mr-3">
+                                <i class="fas fa-broadcast-tower text-red-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium">실시간 세션</div>
+                                <div class="text-xs text-gray-500">라이브 수업 진행</div>
+                            </div>
                         </button>
                     </li>
                     <li>
                         <button onclick="teacherDashboard.showSessionHistory(); teacherDashboard.closeMobileMenu();" 
-                                class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
-                            <i class="fas fa-history mr-3"></i>세션 기록
+                                class="nav-item w-full text-left flex items-center px-4 py-3 text-gray-700 rounded-lg transition-all">
+                            <div class="bg-purple-100 p-2 rounded-lg mr-3">
+                                <i class="fas fa-history text-purple-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium">세션 기록</div>
+                                <div class="text-xs text-gray-500">수업 이력 관리</div>
+                            </div>
                         </button>
                     </li>
                     <li>
                         <button onclick="teacherDashboard.showStudentProgress(); teacherDashboard.closeMobileMenu();" 
-                                class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
-                            <i class="fas fa-chart-line mr-3"></i>학생 진도
+                                class="nav-item w-full text-left flex items-center px-4 py-3 text-gray-700 rounded-lg transition-all">
+                            <div class="bg-orange-100 p-2 rounded-lg mr-3">
+                                <i class="fas fa-chart-line text-orange-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium">학생 진도</div>
+                                <div class="text-xs text-gray-500">학습 현황 분석</div>
+                            </div>
                         </button>
                     </li>
-                    <li class="border-t border-gray-600 pt-2 mt-2">
-                        <button onclick="teacherDashboard.showDeletionRequests(); teacherDashboard.closeMobileMenu();" 
-                                class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
-                            <i class="fas fa-trash-restore mr-3"></i>삭제 요청 관리
-                            <span id="pending-requests-badge" class="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1 hidden">0</span>
-                        </button>
-                    </li>
-                    <li>
-                        <button onclick="teacherDashboard.showAccountSettings(); teacherDashboard.closeMobileMenu();" 
-                                class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
-                            <i class="fas fa-cog mr-3"></i>계정 설정
-                        </button>
-                    </li>
+                </ul>
+                
+                <!-- 관리 섹션 -->
+                <div class="mt-6">
+                    <h3 class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">관리</h3>
+                    <ul class="space-y-2">
+                        <li>
+                            <button onclick="teacherDashboard.showDeletionRequests(); teacherDashboard.closeMobileMenu();" 
+                                    class="nav-item w-full text-left flex items-center px-4 py-3 text-gray-700 rounded-lg transition-all">
+                                <div class="bg-yellow-100 p-2 rounded-lg mr-3">
+                                    <i class="fas fa-trash-restore text-yellow-600"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-medium">삭제 요청</div>
+                                    <div class="text-xs text-gray-500">학생 요청 처리</div>
+                                </div>
+                                <span id="pending-requests-badge" class="bg-red-500 text-white text-xs rounded-full px-2 py-1 hidden">0</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button onclick="teacherDashboard.showAccountSettings(); teacherDashboard.closeMobileMenu();" 
+                                    class="nav-item w-full text-left flex items-center px-4 py-3 text-gray-700 rounded-lg transition-all">
+                                <div class="bg-gray-100 p-2 rounded-lg mr-3">
+                                    <i class="fas fa-cog text-gray-600"></i>
+                                </div>
+                                <div>
+                                    <div class="font-medium">계정 설정</div>
+                                    <div class="text-xs text-gray-500">개인정보 관리</div>
+                                </div>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
                 </ul>
             </div>
         `;
@@ -166,11 +251,17 @@ class TeacherDashboard {
         // 모바일 사이드바
         const mobileSidebar = document.getElementById('mobile-sidebar');
         if (mobileSidebar) {
+            mobileSidebar.className = "md:hidden fixed left-0 top-0 h-full w-80 bg-white shadow-2xl transform -translate-x-full transition-transform duration-300 ease-in-out z-40";
             mobileSidebar.innerHTML = `
-                <div class="p-4 border-b border-gray-700">
+                <div class="gradient-header p-4 text-white">
                     <div class="flex items-center justify-between">
-                        <h2 class="text-lg font-semibold text-white">메뉴</h2>
-                        <button onclick="teacherDashboard.closeMobileMenu()" class="text-gray-400 hover:text-white">
+                        <div class="flex items-center">
+                            <div class="bg-white bg-opacity-20 rounded-full p-2 mr-3">
+                                <i class="fas fa-graduation-cap text-white"></i>
+                            </div>
+                            <h2 class="text-lg font-semibold text-white">EunPyeong Python Education</h2>
+                        </div>
+                        <button onclick="teacherDashboard.closeMobileMenu()" class="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-lg transition-colors">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -221,19 +312,19 @@ class TeacherDashboard {
         
         const mainContent = document.getElementById('main-content');
         mainContent.innerHTML = `
-            <div class="bg-gray-800 rounded-lg shadow-xl p-6">
+            <div class="bg-white rounded-lg shadow-xl p-6 border border-gray-200">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-white">문제 관리</h2>
+                    <h2 class="text-2xl font-bold text-gray-800">문제 관리</h2>
                     <button onclick="teacherDashboard.showCreateProblemForm()" 
-                            class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white">
+                            class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded text-white shadow-lg transition-all hover:shadow-xl">
                         <i class="fas fa-plus mr-2"></i>문제 생성
                     </button>
                 </div>
                 
                 <div id="problems-list" class="space-y-4">
                     <div class="text-center py-4">
-                        <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
-                        <p class="text-gray-400 mt-2">문제 목록을 불러오는 중...</p>
+                        <i class="fas fa-spinner fa-spin text-2xl text-emerald-500"></i>
+                        <p class="text-gray-600 mt-2">문제 목록을 불러오는 중...</p>
                     </div>
                 </div>
             </div>
@@ -260,8 +351,8 @@ class TeacherDashboard {
         } catch (error) {
             document.getElementById('problems-list').innerHTML = `
                 <div class="text-center py-4">
-                    <i class="fas fa-exclamation-triangle text-2xl text-red-400"></i>
-                    <p class="text-red-400 mt-2">문제 목록을 불러오는데 실패했습니다.</p>
+                    <i class="fas fa-exclamation-triangle text-2xl text-red-500"></i>
+                    <p class="text-red-600 mt-2">문제 목록을 불러오는데 실패했습니다.</p>
                 </div>
             `;
         }
@@ -273,10 +364,10 @@ class TeacherDashboard {
         if (problems.length === 0) {
             problemsList.innerHTML = `
                 <div class="text-center py-8">
-                    <i class="fas fa-tasks text-4xl text-gray-400"></i>
-                    <p class="text-gray-400 mt-4">아직 생성한 문제가 없습니다.</p>
+                    <i class="fas fa-tasks text-4xl text-emerald-400"></i>
+                    <p class="text-gray-600 mt-4">아직 생성한 문제가 없습니다.</p>
                     <button onclick="teacherDashboard.showCreateProblemForm()" 
-                            class="mt-4 bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded text-white">
+                            class="mt-4 bg-emerald-600 hover:bg-emerald-700 px-6 py-2 rounded text-white shadow-lg transition-all hover:shadow-xl">
                         첫 번째 문제 만들기
                     </button>
                 </div>
@@ -285,30 +376,35 @@ class TeacherDashboard {
         }
         
         problemsList.innerHTML = problems.map(problem => `
-            <div class="bg-gray-700 p-4 rounded-lg">
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow">
                 <div class="flex justify-between items-start">
                     <div class="flex-1">
-                        <h3 class="text-lg font-semibold text-white">${problem.title}</h3>
-                        <p class="text-gray-300 mt-1">${problem.description}</p>
+                        <h3 class="text-lg font-semibold text-gray-800">${problem.title}</h3>
+                        <p class="text-gray-600 mt-1">${problem.description}</p>
                         <div class="flex items-center mt-2 space-x-4">
-                            <span class="px-2 py-1 bg-${this.getDifficultyColor(problem.difficulty)}-900 text-${this.getDifficultyColor(problem.difficulty)}-300 text-xs rounded">
+                            <span class="px-2 py-1 bg-${this.getDifficultyColor(problem.difficulty)}-100 text-${this.getDifficultyColor(problem.difficulty)}-700 text-xs rounded">
                                 ${this.getDifficultyText(problem.difficulty)}
                             </span>
-                            <span class="text-gray-400 text-sm">
-                                <i class="fas fa-clock mr-1"></i>${problem.time_limit}초
+                            <span class="text-gray-500 text-sm">
+                                <i class="fas fa-clock mr-1 text-emerald-500"></i>${problem.time_limit}초
                             </span>
-                            <span class="text-gray-400 text-sm">
-                                ${new Date(problem.created_at).toLocaleDateString('ko-KR')}
+                            <span class="text-gray-500 text-sm">
+                                <i class="fas fa-calendar mr-1 text-emerald-500"></i>${new Date(problem.created_at).toLocaleDateString('ko-KR')}
                             </span>
                         </div>
                     </div>
                     <div class="ml-4 space-x-2">
                         <button onclick="teacherDashboard.startSession(${problem.id}, '${problem.title}')" 
-                                class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-white text-sm">
+                                class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1 rounded text-sm transition-colors">
                             <i class="fas fa-play mr-1"></i>시작
                         </button>
-                        <button class="bg-gray-600 hover:bg-gray-700 px-3 py-1 rounded text-white text-sm">
+                        <button onclick="teacherDashboard.showEditProblemForm(${problem.id})" 
+                                class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded text-sm transition-colors">
                             <i class="fas fa-edit mr-1"></i>편집
+                        </button>
+                        <button onclick="teacherDashboard.deleteProblem(${problem.id}, '${problem.title}')" 
+                                class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded text-sm transition-colors">
+                            <i class="fas fa-trash mr-1"></i>삭제
                         </button>
                     </div>
                 </div>
@@ -337,62 +433,62 @@ class TeacherDashboard {
     showCreateProblemForm() {
         const mainContent = document.getElementById('main-content');
         mainContent.innerHTML = `
-            <div class="bg-gray-800 rounded-lg shadow-xl p-6">
+            <div class="bg-white rounded-lg shadow-xl p-6 border border-gray-200">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-white">문제 생성</h2>
+                    <h2 class="text-2xl font-bold text-gray-800">문제 생성</h2>
                     <button onclick="teacherDashboard.showProblemManagement()" 
-                            class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded text-white">
+                            class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded transition-colors">
                         <i class="fas fa-arrow-left mr-2"></i>뒤로가기
                     </button>
                 </div>
                 
                 <form id="create-problem-form" class="space-y-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">문제 제목</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">문제 제목</label>
                         <input type="text" name="title" required 
-                               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                                placeholder="예: 변수와 출력">
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">문제 설명</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">문제 설명</label>
                         <textarea name="description" required rows="4"
-                                  class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                                   placeholder="문제에 대한 자세한 설명을 입력하세요..."></textarea>
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">초기 코드 (선택사항)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">초기 코드 (선택사항)</label>
                             <textarea name="initial_code" rows="4"
-                                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white font-mono"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md font-mono focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                                       placeholder="# 학생에게 제공할 초기 코드&#10;print('Hello, World!')"></textarea>
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">예상 출력 (선택사항)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">예상 출력 (선택사항)</label>
                             <textarea name="expected_output" rows="4"
-                                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white font-mono"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md font-mono focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                                       placeholder="예상되는 출력 결과"></textarea>
                         </div>
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">제한 시간 (초)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">제한 시간 (초)</label>
                             <input type="number" name="time_limit" value="30" min="10" max="300"
-                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">메모리 제한 (MB)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">메모리 제한 (MB)</label>
                             <input type="number" name="memory_limit" value="128" min="64" max="512"
-                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-300 mb-2">난이도</label>
-                            <select name="difficulty" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">난이도</label>
+                            <select name="difficulty" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
                                 <option value="easy">쉬움</option>
                                 <option value="medium">보통</option>
                                 <option value="hard">어려움</option>
@@ -400,7 +496,7 @@ class TeacherDashboard {
                         </div>
                     </div>
                     
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded">
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded transition-colors shadow-lg hover:shadow-xl">
                         <i class="fas fa-plus mr-2"></i>문제 생성
                     </button>
                 </form>
@@ -467,11 +563,32 @@ class TeacherDashboard {
         this.showSessionStartModal(problemId, problemTitle);
     }
     
-    showSessionStartModal(problemId, problemTitle) {
+    async showSessionStartModal(problemId, problemTitle) {
         const mainContent = document.getElementById('main-content');
         const existingModal = document.getElementById('session-modal');
         if (existingModal) {
             existingModal.remove();
+        }
+        
+        // 클래스 목록 로드
+        let classOptions = '<option value="">클래스를 선택하세요...</option>';
+        try {
+            const response = await fetch('/api/teacher/classes', {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            const data = await response.json();
+            if (response.ok && data.classes && data.classes.length > 0) {
+                classOptions = data.classes.map(cls => 
+                    `<option value="${cls.id}">${cls.id} - ${cls.name}</option>`
+                ).join('');
+            } else {
+                classOptions = '<option value="">클래스가 없습니다. 먼저 클래스를 생성해주세요.</option>';
+            }
+        } catch (error) {
+            console.error('클래스 목록 로드 오류:', error);
+            classOptions = '<option value="">클래스 목록 로드 실패</option>';
         }
         
         const modal = document.createElement('div');
@@ -490,9 +607,11 @@ class TeacherDashboard {
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">클래스 ID</label>
-                        <input type="text" id="session-class" value="CS101" required
-                               class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">클래스 선택</label>
+                        <select id="session-class" required
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                            ${classOptions}
+                        </select>
                     </div>
                     
                     <div class="flex justify-end gap-3 pt-4">
@@ -1170,7 +1289,7 @@ class TeacherDashboard {
     
     async downloadSessionReport(sessionId) {
         try {
-            const response = await fetch(`/api/teacher/sessions/${sessionId}/submissions`, {
+            const response = await fetch(`/api/teacher/sessions/${sessionId}/submissions/download`, {
                 headers: {
                     'Authorization': `Bearer ${this.token}`
                 }
@@ -1179,7 +1298,7 @@ class TeacherDashboard {
             const data = await response.json();
             
             if (response.ok) {
-                this.exportToExcel(data.submissions, `세션_${sessionId}_보고서`);
+                this.downloadExcel(data.submissions, `session_${sessionId}_report_${new Date().toISOString().slice(0, 10)}`);
             } else {
                 throw new Error(data.error);
             }
@@ -1999,6 +2118,827 @@ class TeacherDashboard {
         } catch (error) {
             console.error('Change password error:', error);
             this.showNotification('error', '서버 연결에 실패했습니다.');
+        }
+    }
+    
+    // 문제 편집 화면 표시
+    async showEditProblemForm(problemId) {
+        try {
+            // 기존 문제 정보 가져오기
+            const response = await fetch(`/api/teacher/problems/${problemId}`, {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error);
+            }
+            
+            const problem = data.problem;
+            
+            const mainContent = document.getElementById('main-content');
+            mainContent.innerHTML = `
+                <div class="bg-gray-800 rounded-lg shadow-xl p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-white">문제 편집</h2>
+                        <button onclick="teacherDashboard.showProblemManagement()" 
+                                class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded text-white">
+                            <i class="fas fa-arrow-left mr-2"></i>뒤로가기
+                        </button>
+                    </div>
+                    
+                    <form id="edit-problem-form" class="space-y-6">
+                        <input type="hidden" name="problem_id" value="${problem.id}">
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">문제 제목</label>
+                            <input type="text" name="title" value="${problem.title}" required 
+                                   class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                                   placeholder="예: 변수와 출력">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">문제 설명</label>
+                            <textarea name="description" required rows="4"
+                                      class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white"
+                                      placeholder="문제에 대한 자세한 설명을 입력하세요...">${problem.description}</textarea>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">초기 코드 (선택사항)</label>
+                                <textarea name="initial_code" rows="4"
+                                          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white font-mono"
+                                          placeholder="# 학생에게 제공할 초기 코드&#10;print('Hello, World!')">${problem.initial_code || ''}</textarea>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">예상 출력 (선택사항)</label>
+                                <textarea name="expected_output" rows="4"
+                                          class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white font-mono"
+                                          placeholder="예상되는 출력 결과">${problem.expected_output || ''}</textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">제한 시간 (초)</label>
+                                <input type="number" name="time_limit" value="${problem.time_limit}" min="10" max="300"
+                                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">메모리 제한 (MB)</label>
+                                <input type="number" name="memory_limit" value="${problem.memory_limit}" min="64" max="512"
+                                       class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">난이도</label>
+                                <select name="difficulty" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                                    <option value="easy" ${problem.difficulty === 'easy' ? 'selected' : ''}>쉬움</option>
+                                    <option value="medium" ${problem.difficulty === 'medium' ? 'selected' : ''}>보통</option>
+                                    <option value="hard" ${problem.difficulty === 'hard' ? 'selected' : ''}>어려움</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-4">
+                            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded">
+                                <i class="fas fa-save mr-2"></i>수정 저장
+                            </button>
+                            <button type="button" onclick="teacherDashboard.showProblemManagement()" 
+                                    class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded">
+                                <i class="fas fa-times mr-2"></i>취소
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div id="edit-problem-result" class="mt-4 hidden"></div>
+                </div>
+            `;
+            
+            document.getElementById('edit-problem-form').addEventListener('submit', this.handleEditProblem.bind(this));
+            
+        } catch (error) {
+            this.showNotification('error', '문제 정보를 불러오는데 실패했습니다.');
+        }
+    }
+    
+    // 문제 편집 처리
+    async handleEditProblem(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const problemData = Object.fromEntries(formData.entries());
+        const problemId = problemData.problem_id;
+        
+        // problem_id는 API 요청에서 제외
+        delete problemData.problem_id;
+        
+        // 테스트 케이스는 간단히 빈 배열로 설정
+        problemData.test_cases = [];
+        
+        try {
+            const response = await fetch(`/api/teacher/problems/${problemId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify(problemData)
+            });
+            
+            const data = await response.json();
+            
+            const resultDiv = document.getElementById('edit-problem-result');
+            resultDiv.classList.remove('hidden');
+            
+            if (response.ok) {
+                resultDiv.innerHTML = `
+                    <div class="p-3 bg-green-900 border border-green-700 rounded-md text-green-300">
+                        <i class="fas fa-check-circle mr-2"></i>문제가 성공적으로 수정되었습니다.
+                    </div>
+                `;
+                setTimeout(() => this.showProblemManagement(), 2000);
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="p-3 bg-red-900 border border-red-700 rounded-md text-red-300">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>${data.error}
+                    </div>
+                `;
+            }
+        } catch (error) {
+            const resultDiv = document.getElementById('edit-problem-result');
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerHTML = `
+                <div class="p-3 bg-red-900 border border-red-700 rounded-md text-red-300">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>문제 수정 중 오류가 발생했습니다.
+                </div>
+            `;
+        }
+    }
+    
+    // 문제 삭제
+    async deleteProblem(problemId, problemTitle) {
+        if (!confirm(`정말로 "${problemTitle}" 문제를 삭제하시겠습니까?\n\n주의: 이 문제와 관련된 모든 세션과 제출 기록도 함께 삭제됩니다.`)) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/teacher/problems/${problemId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            if (response.ok) {
+                this.showNotification('success', '문제가 성공적으로 삭제되었습니다.');
+                this.loadProblems(); // 문제 목록 새로고침
+            } else {
+                const data = await response.json();
+                this.showNotification('error', `삭제 실패: ${data.error}`);
+            }
+        } catch (error) {
+            this.showNotification('error', '문제 삭제 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 클래스 관리 화면
+    async showClassManagement() {
+        this.stopPolling();
+        
+        const mainContent = document.getElementById('main-content');
+        mainContent.innerHTML = `
+            <div class="space-y-6">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-2xl font-bold text-gray-800">클래스 관리</h1>
+                    <button onclick="teacherDashboard.showCreateClassForm()" 
+                            class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-white shadow-lg transition-all hover:shadow-xl">
+                        <i class="fas fa-plus mr-2"></i>클래스 생성
+                    </button>
+                </div>
+                
+                <div id="classes-container" class="space-y-4">
+                    <div class="text-center py-8">
+                        <div class="animate-spin w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full mx-auto"></div>
+                        <p class="text-gray-600 mt-2">클래스 목록을 불러오는 중...</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        await this.loadClasses();
+    }
+    
+    async loadClasses() {
+        try {
+            const response = await fetch('/api/teacher/classes', {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.renderClassesList(data.classes);
+            } else {
+                document.getElementById('classes-container').innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-red-400">${data.error}</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            document.getElementById('classes-container').innerHTML = `
+                <div class="text-center py-8">
+                    <p class="text-red-400">클래스 목록 로드 중 오류가 발생했습니다.</p>
+                </div>
+            `;
+        }
+    }
+    
+    renderClassesList(classes) {
+        const container = document.getElementById('classes-container');
+        
+        if (!classes || classes.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-12 bg-white rounded-lg border border-gray-200 shadow-lg">
+                    <i class="fas fa-users text-4xl text-emerald-400 mb-4"></i>
+                    <h3 class="text-lg font-medium text-gray-800 mb-2">클래스가 없습니다</h3>
+                    <p class="text-gray-600 mb-4">첫 번째 클래스를 생성해보세요.</p>
+                    <button onclick="teacherDashboard.showCreateClassForm()" 
+                            class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-white shadow-lg transition-all hover:shadow-xl">
+                        <i class="fas fa-plus mr-2"></i>클래스 생성
+                    </button>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = classes.map(cls => `
+            <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-lg hover:shadow-xl transition-all">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">${cls.name}</h3>
+                        <p class="text-gray-600 text-sm mb-1">클래스 ID: <code class="bg-gray-100 px-2 py-1 rounded text-emerald-600 font-mono">${cls.id}</code></p>
+                        <p class="text-gray-600 text-sm mb-3">${cls.description || '설명 없음'}</p>
+                        <div class="flex items-center text-sm text-gray-500">
+                            <i class="fas fa-users mr-2 text-emerald-500"></i>
+                            <span>${cls.student_count}명</span>
+                            <i class="fas fa-calendar-alt ml-4 mr-2 text-emerald-500"></i>
+                            <span>${this.formatKoreanTime(cls.created_at)}</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 ml-4">
+                        <button onclick="teacherDashboard.showClassMembers('${cls.id}')" 
+                                class="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-3 py-1 rounded text-sm transition-colors">
+                            <i class="fas fa-users mr-1"></i>멤버
+                        </button>
+                        <button onclick="teacherDashboard.showEditClassForm('${cls.id}')" 
+                                class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded text-sm transition-colors">
+                            <i class="fas fa-edit mr-1"></i>편집
+                        </button>
+                        <button onclick="teacherDashboard.deleteClass('${cls.id}', '${cls.name}')" 
+                                class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded text-sm transition-colors">
+                            <i class="fas fa-trash mr-1"></i>삭제
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    showCreateClassForm() {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center';
+        modal.innerHTML = `
+            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md border border-gray-200">
+                <h3 class="text-xl font-bold mb-4 text-gray-800">클래스 생성</h3>
+                
+                <form id="create-class-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">클래스 ID *</label>
+                        <input type="text" id="class-id" required
+                               placeholder="예: python2024, grade1a"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                        <p class="text-xs text-gray-500 mt-1">영문, 숫자, 한글, 특수문자 사용 가능</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">클래스 이름 *</label>
+                        <input type="text" id="class-name" required
+                               placeholder="예: 파이썬 초급반"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">설명</label>
+                        <textarea id="class-description" rows="3"
+                                  placeholder="클래스에 대한 설명을 입력하세요"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"></textarea>
+                    </div>
+                    
+                    <div class="flex justify-end gap-3 pt-4">
+                        <button type="button" onclick="this.closest('.fixed').remove()" 
+                                class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md transition-colors">취소</button>
+                        <button type="submit" 
+                                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md transition-colors">
+                            <i class="fas fa-plus mr-2"></i>생성
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        document.getElementById('create-class-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.createClass();
+        });
+        
+        setTimeout(() => document.getElementById('class-id').focus(), 100);
+    }
+    
+    async createClass() {
+        const id = document.getElementById('class-id').value.trim();
+        const name = document.getElementById('class-name').value.trim();
+        const description = document.getElementById('class-description').value.trim();
+        
+        if (!id || !name) {
+            alert('클래스 ID와 이름은 필수입니다.');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/teacher/classes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify({ id, name, description })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.showNotification('success', '클래스가 생성되었습니다.');
+                document.querySelector('.fixed').remove();
+                this.loadClasses();
+            } else {
+                alert(`클래스 생성 실패: ${data.error}`);
+            }
+        } catch (error) {
+            alert('클래스 생성 중 오류가 발생했습니다.');
+        }
+    }
+    
+    async deleteClass(classId, className) {
+        if (!confirm(`정말로 클래스 "${className}"를 삭제하시겠습니까?\n\n모든 클래스 멤버도 함께 제거됩니다.`)) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/teacher/classes/${classId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            if (response.ok) {
+                this.showNotification('success', '클래스가 삭제되었습니다.');
+                this.loadClasses();
+            } else {
+                const data = await response.json();
+                this.showNotification('error', `삭제 실패: ${data.error}`);
+            }
+        } catch (error) {
+            this.showNotification('error', '클래스 삭제 중 오류가 발생했습니다.');
+        }
+    }
+    
+    async showClassMembers(classId) {
+        try {
+            const response = await fetch(`/api/teacher/classes/${classId}/members`, {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.renderClassMembersModal(classId, data.class, data.members);
+            } else {
+                alert(`클래스 멤버 조회 실패: ${data.error}`);
+            }
+        } catch (error) {
+            alert('클래스 멤버 조회 중 오류가 발생했습니다.');
+        }
+    }
+    
+    renderClassMembersModal(classId, classInfo, members) {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center';
+        modal.innerHTML = `
+            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-4xl border border-gray-200 max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-800">${classInfo.name} - 클래스 멤버</h3>
+                    <div class="flex gap-2">
+                        <button onclick="teacherDashboard.showAddStudentModal('${classId}')" 
+                                class="bg-emerald-600 hover:bg-emerald-700 px-3 py-1 rounded text-white text-sm transition-colors">
+                            <i class="fas fa-user-plus mr-1"></i>학생 추가
+                        </button>
+                        <button onclick="this.closest('.fixed').remove()" 
+                                class="text-gray-400 hover:text-gray-600 text-xl transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    ${members.length === 0 ? `
+                        <div class="text-center py-8">
+                            <i class="fas fa-users text-4xl text-emerald-400 mb-4"></i>
+                            <p class="text-gray-600">클래스에 학생이 없습니다.</p>
+                        </div>
+                    ` : members.map(member => `
+                        <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                            <div>
+                                <h4 class="font-medium text-gray-800">${member.full_name}</h4>
+                                <p class="text-sm text-gray-600">ID: ${member.username}</p>
+                                <p class="text-xs text-gray-500">가입일: ${this.formatKoreanTime(member.joined_at)}</p>
+                            </div>
+                            <button onclick="teacherDashboard.removeStudentFromClass('${classId}', ${member.id}, '${member.full_name}')" 
+                                    class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded text-sm transition-colors">
+                                <i class="fas fa-user-minus mr-1"></i>제거
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+    
+    async showAddStudentModal(classId) {
+        // 전체 학생 목록 로드
+        try {
+            const response = await fetch('/api/teacher/students', {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.renderAddStudentModal(classId, data.students);
+            } else {
+                alert(`학생 목록 조회 실패: ${data.error}`);
+            }
+        } catch (error) {
+            alert('학생 목록 조회 중 오류가 발생했습니다.');
+        }
+    }
+    
+    renderAddStudentModal(classId, students) {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center';
+        modal.innerHTML = `
+            <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-2xl border border-gray-700 max-h-[80vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-white">학생 추가</h3>
+                    <button onclick="this.closest('.fixed').remove()" 
+                            class="text-gray-400 hover:text-white text-xl">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="mb-4">
+                    <input type="text" id="student-search" placeholder="학생 이름이나 ID로 검색..."
+                           class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white">
+                </div>
+                
+                <form id="add-students-form">
+                    <div class="space-y-2 max-h-60 overflow-y-auto mb-4" id="students-list">
+                        ${students.map(student => `
+                            <label class="flex items-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 cursor-pointer">
+                                <input type="checkbox" value="${student.id}" class="mr-3">
+                                <div>
+                                    <div class="font-medium text-white">${student.full_name}</div>
+                                    <div class="text-sm text-gray-400">ID: ${student.username}</div>
+                                </div>
+                            </label>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="flex justify-end gap-3">
+                        <button type="button" onclick="this.closest('.fixed').remove()" 
+                                class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md">취소</button>
+                        <button type="submit" 
+                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">
+                            <i class="fas fa-user-plus mr-2"></i>선택한 학생 추가
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // 검색 기능
+        document.getElementById('student-search').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const studentLabels = document.querySelectorAll('#students-list label');
+            
+            studentLabels.forEach(label => {
+                const text = label.textContent.toLowerCase();
+                label.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+            });
+        });
+        
+        // 폼 제출
+        document.getElementById('add-students-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.addStudentsToClass(classId);
+        });
+    }
+    
+    async addStudentsToClass(classId) {
+        const selectedStudents = Array.from(document.querySelectorAll('#students-list input[type="checkbox"]:checked'))
+            .map(cb => parseInt(cb.value));
+        
+        if (selectedStudents.length === 0) {
+            alert('추가할 학생을 선택해주세요.');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/teacher/classes/${classId}/members`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify({ studentIds: selectedStudents })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.showNotification('success', data.message);
+                document.querySelector('.fixed').remove(); // 학생 추가 모달 닫기
+                // 클래스 멤버 모달이 있다면 새로고침
+                const memberModal = document.querySelector('.fixed');
+                if (memberModal) {
+                    memberModal.remove();
+                    this.showClassMembers(classId);
+                }
+                this.loadClasses(); // 클래스 목록 새로고침
+            } else {
+                alert(`학생 추가 실패: ${data.error}`);
+            }
+        } catch (error) {
+            alert('학생 추가 중 오류가 발생했습니다.');
+        }
+    }
+    
+    async removeStudentFromClass(classId, studentId, studentName) {
+        if (!confirm(`정말로 "${studentName}" 학생을 클래스에서 제거하시겠습니까?`)) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/teacher/classes/${classId}/members/${studentId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            if (response.ok) {
+                this.showNotification('success', '학생이 클래스에서 제거되었습니다.');
+                // 멤버 모달 새로고침
+                const memberModal = document.querySelector('.fixed');
+                if (memberModal) {
+                    memberModal.remove();
+                    this.showClassMembers(classId);
+                }
+                this.loadClasses();
+            } else {
+                const data = await response.json();
+                this.showNotification('error', `제거 실패: ${data.error}`);
+            }
+        } catch (error) {
+            this.showNotification('error', '학생 제거 중 오류가 발생했습니다.');
+        }
+    }
+    
+    // 클래스 편집 기능
+    async showEditClassForm(classId) {
+        try {
+            // 클래스 정보 먼저 로드
+            const response = await fetch(`/api/teacher/classes/${classId}`, {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                alert(`클래스 정보 로드 실패: ${data.error}`);
+                return;
+            }
+            
+            const classInfo = data.class;
+            
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center';
+            modal.innerHTML = `
+                <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md border border-gray-200">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">클래스 편집</h3>
+                    
+                    <form id="edit-class-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">클래스 ID</label>
+                            <input type="text" id="edit-class-id" value="${classInfo.id}" disabled
+                                   class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-600 cursor-not-allowed">
+                            <p class="text-xs text-gray-500 mt-1">클래스 ID는 수정할 수 없습니다</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">클래스 이름 *</label>
+                            <input type="text" id="edit-class-name" value="${classInfo.name}" required
+                                   placeholder="예: 파이썬 초급반"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">설명</label>
+                            <textarea id="edit-class-description" rows="3"
+                                      placeholder="클래스에 대한 설명을 입력하세요"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">${classInfo.description || ''}</textarea>
+                        </div>
+                        
+                        <div class="flex justify-end gap-3 pt-4">
+                            <button type="button" onclick="this.closest('.fixed').remove()" 
+                                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md transition-colors">취소</button>
+                            <button type="submit" 
+                                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md transition-colors">
+                                <i class="fas fa-save mr-2"></i>저장
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            document.getElementById('edit-class-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.updateClass(classId);
+            });
+            
+            setTimeout(() => document.getElementById('edit-class-name').focus(), 100);
+            
+        } catch (error) {
+            alert('클래스 정보 로드 중 오류가 발생했습니다.');
+        }
+    }
+    
+    async updateClass(classId) {
+        const name = document.getElementById('edit-class-name').value.trim();
+        const description = document.getElementById('edit-class-description').value.trim();
+        
+        if (!name) {
+            alert('클래스 이름은 필수입니다.');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/teacher/classes/${classId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify({ name, description })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.showNotification('success', '클래스가 수정되었습니다.');
+                document.querySelector('.fixed').remove();
+                this.loadClasses();
+            } else {
+                alert(`클래스 수정 실패: ${data.error}`);
+            }
+        } catch (error) {
+            alert('클래스 수정 중 오류가 발생했습니다.');
+        }
+    }
+    
+    // 프로필 편집 모달
+    showProfileEditModal() {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center';
+        modal.innerHTML = `
+            <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md border border-gray-200">
+                <h3 class="text-xl font-bold mb-4 text-gray-800">프로필 편집</h3>
+                
+                <form id="profile-edit-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">이름 *</label>
+                        <input type="text" id="profile-name" value="${this.user.full_name}" required
+                               placeholder="이름을 입력하세요"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">이메일 *</label>
+                        <input type="email" id="profile-email" value="${this.user.email || ''}" required
+                               placeholder="이메일을 입력하세요"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">사용자 ID</label>
+                        <input type="text" value="${this.user.username}" disabled
+                               class="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-600 cursor-not-allowed">
+                        <p class="text-xs text-gray-500 mt-1">사용자 ID는 변경할 수 없습니다</p>
+                    </div>
+                    
+                    <div class="flex justify-end gap-3 pt-4">
+                        <button type="button" onclick="this.closest('.fixed').remove()" 
+                                class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md transition-colors">취소</button>
+                        <button type="submit" 
+                                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md transition-colors">
+                            <i class="fas fa-save mr-2"></i>저장
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        document.getElementById('profile-edit-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.updateProfile();
+        });
+        
+        setTimeout(() => document.getElementById('profile-name').focus(), 100);
+    }
+    
+    async updateProfile() {
+        const name = document.getElementById('profile-name').value.trim();
+        const email = document.getElementById('profile-email').value.trim();
+        
+        if (!name || !email) {
+            alert('이름과 이메일은 필수입니다.');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/teacher/profile', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify({ full_name: name, email: email })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                // 로컬 사용자 정보 업데이트
+                this.user.full_name = name;
+                this.user.email = email;
+                localStorage.setItem('user', JSON.stringify(this.user));
+                
+                // 네비게이션 다시 렌더링
+                this.renderNavigation();
+                
+                this.showNotification('success', '프로필이 업데이트되었습니다.');
+                document.querySelector('.fixed').remove();
+            } else {
+                alert(`프로필 업데이트 실패: ${data.error}`);
+            }
+        } catch (error) {
+            alert('프로필 업데이트 중 오류가 발생했습니다.');
         }
     }
 }

@@ -68,6 +68,476 @@ teacher.get('/problems', async (c) => {
   }
 });
 
+// 교사의 클래스 목록 조회
+teacher.get('/classes', async (c) => {
+  try {
+    const authHeader = c.req.header('Authorization');
+    const token = authHeader?.substring(7);
+    const payload = JSON.parse(atob(token!.split('.')[1]));
+
+    console.log('Teacher classes request - userId:', payload.userId);
+
+    const classes = await c.env.DB.prepare(`
+      SELECT c.id, c.name, c.description, c.created_at,
+             COUNT(cm.student_id) as student_count
+      FROM classes c
+      LEFT JOIN class_members cm ON c.id = cm.class_id
+      WHERE c.teacher_id = ?
+      GROUP BY c.id, c.name, c.description, c.created_at
+      ORDER BY c.created_at DESC
+    `).bind(payload.userId).all();
+
+    console.log('Found classes for teacher:', classes.results.length);
+
+    return c.json({ classes: classes.results });
+  } catch (error) {
+    console.error('Get classes error:', error);
+    return c.json({ error: '클래스 조회 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
+// 클래스 생성
+teacher.post('/classes', async (c) => {
+  try {
+    const authHeader = c.req.header('Authorization');
+    const token = authHeader?.substring(7);
+    const payload = JSON.parse(atob(token!.split('.')[1]));
+
+    const { id, name, description } = await c.req.json();
+
+    if (!id || !name) {
+      return c.json({ error: '클래스 ID와 이름은 필수입니다.' }, 400);
+    }
+
+    // 클래스 ID 중복 확인
+    const existing = await c.env.DB.prepare(
+      'SELECT id FROM classes WHERE id = ?'
+    ).bind(id).first();
+
+    if (existing) {
+      return c.json({ error: '이미 존재하는 클래스 ID입니다.' }, 400);
+    }
+
+    const result = await c.env.DB.prepare(`
+      INSERT INTO classes (id, name, description, teacher_id)
+      VALUES (?, ?, ?, ?)
+    `).bind(id, name, description || '', payload.userId).run();
+
+    return c.json({ 
+      message: '클래스가 생성되었습니다.',
+      class: { id, name, description, student_count: 0 }
+    });
+
+  } catch (error) {
+    console.error('Create class error:', error);
+    return c.json({ error: '클래스 생성 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
+// 클래스 수정
+teacher.put('/classes/:id', async (c) => {
+  try {
+    const classId = c.req.param('id');
+    const authHeader = c.req.header('Authorization');
+    const token = authHeader?.substring(7);
+    const payload = JSON.parse(atob(token!.split('.')[1]));
+
+    const { name, description } = await c.req.json();
+
+    if (!name) {
+      return c.json({ error: '클래스 이름은 필수입니다.' }, 400);
+    }
+
+    // 클래스 소유자 확인
+    const existing = await c.env.DB.prepare(
+      'SELECT id FROM classes WHERE id = ? AND teacher_id = ?'
+    ).bind(classId, payload.userId).first();
+
+    if (!existing) {
+      return c.json({ error: '클래스를 찾을 수 없거나 수정 권한이 없습니다.' }, 404);
+    }
+
+    await c.env.DB.prepare(`
+      UPDATE classes 
+      SET name = ?, description = ?
+      WHERE id = ? AND teacher_id = ?
+    `).bind(name, description || '', classId, payload.userId).run();
+
+    return c.json({ message: '클래스가 수정되었습니다.' });
+
+  } catch (error) {
+    console.error('Update class error:', error);
+    return c.json({ error: '클래스 수정 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
+// 클래스 삭제
+teacher.delete('/classes/:id', async (c) => {
+  try {
+    const classId = c.req.param('id');
+    const authHeader = c.req.header('Authorization');
+    const token = authHeader?.substring(7);
+    const payload = JSON.parse(atob(token!.split('.')[1]));
+
+    // 클래스 소유자 확인
+    const existing = await c.env.DB.prepare(
+      'SELECT id, name FROM classes WHERE id = ? AND teacher_id = ?'
+    ).bind(classId, payload.userId).first();
+
+    if (!existing) {
+      return c.json({ error: '클래스를 찾을 수 없거나 삭제 권한이 없습니다.' }, 404);
+    }
+
+    // 활성 세션이 있는지 확인
+    const activeSessions = await c.env.DB.prepare(
+      'SELECT id FROM problem_sessions WHERE class_id = ? AND status = ?'
+    ).bind(classId, 'active').first();
+
+    if (activeSessions) {
+      return c.json({ error: '현재 활성 세션이 있는 클래스는 삭제할 수 없습니다.' }, 400);
+    }
+
+    // 클래스 삭제 (CASCADE로 class_members도 자동 삭제됨)
+    await c.env.DB.prepare(
+      'DELETE FROM classes WHERE id = ? AND teacher_id = ?'
+    ).bind(classId, payload.userId).run();
+
+    return c.json({ message: `클래스 "${existing.name}"가 삭제되었습니다.` });
+
+  } catch (error) {
+    console.error('Delete class error:', error);
+    return c.json({ error: '클래스 삭제 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
+// 개별 클래스 조회
+teacher.get('/classes/:id', async (c) => {
+  try {
+    const classId = c.req.param('id');
+    const authHeader = c.req.header('Authorization');
+    const token = authHeader?.substring(7);
+    const payload = JSON.parse(atob(token!.split('.')[1]));
+
+    // 클래스 소유자 확인 및 정보 조회
+    const classInfo = await c.env.DB.prepare(
+      'SELECT id, name, description, created_at FROM classes WHERE id = ? AND teacher_id = ?'
+    ).bind(classId, payload.userId).first();
+
+    if (!classInfo) {
+      return c.json({ error: '클래스를 찾을 수 없거나 접근 권한이 없습니다.' }, 404);
+    }
+
+    return c.json({ class: classInfo });
+
+  } catch (error) {
+    console.error('Get class info error:', error);
+    return c.json({ error: '클래스 정보 조회 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
+// 클래스 멤버 조회
+teacher.get('/classes/:id/members', async (c) => {
+  try {
+    const classId = c.req.param('id');
+    const authHeader = c.req.header('Authorization');
+    const token = authHeader?.substring(7);
+    const payload = JSON.parse(atob(token!.split('.')[1]));
+
+    // 클래스 소유자 확인
+    const classInfo = await c.env.DB.prepare(
+      'SELECT id, name FROM classes WHERE id = ? AND teacher_id = ?'
+    ).bind(classId, payload.userId).first();
+
+    if (!classInfo) {
+      return c.json({ error: '클래스를 찾을 수 없거나 접근 권한이 없습니다.' }, 404);
+    }
+
+    const members = await c.env.DB.prepare(`
+      SELECT u.id, u.username, u.full_name, cm.joined_at
+      FROM class_members cm
+      JOIN users u ON cm.student_id = u.id
+      WHERE cm.class_id = ?
+      ORDER BY cm.joined_at DESC
+    `).bind(classId).all();
+
+    return c.json({ 
+      class: classInfo,
+      members: members.results 
+    });
+
+  } catch (error) {
+    console.error('Get class members error:', error);
+    return c.json({ error: '클래스 멤버 조회 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
+// 클래스에 학생 추가
+teacher.post('/classes/:id/members', async (c) => {
+  try {
+    const classId = c.req.param('id');
+    const authHeader = c.req.header('Authorization');
+    const token = authHeader?.substring(7);
+    const payload = JSON.parse(atob(token!.split('.')[1]));
+
+    const { studentIds } = await c.req.json();
+
+    if (!studentIds || !Array.isArray(studentIds)) {
+      return c.json({ error: '학생 ID 목록이 필요합니다.' }, 400);
+    }
+
+    // 클래스 소유자 확인
+    const classInfo = await c.env.DB.prepare(
+      'SELECT id FROM classes WHERE id = ? AND teacher_id = ?'
+    ).bind(classId, payload.userId).first();
+
+    if (!classInfo) {
+      return c.json({ error: '클래스를 찾을 수 없거나 접근 권한이 없습니다.' }, 404);
+    }
+
+    let addedCount = 0;
+    for (const studentId of studentIds) {
+      try {
+        await c.env.DB.prepare(`
+          INSERT OR IGNORE INTO class_members (class_id, student_id)
+          VALUES (?, ?)
+        `).bind(classId, studentId).run();
+        addedCount++;
+      } catch (error) {
+        console.error('Failed to add student:', studentId, error);
+      }
+    }
+
+    return c.json({ 
+      message: `${addedCount}명의 학생이 클래스에 추가되었습니다.`,
+      addedCount
+    });
+
+  } catch (error) {
+    console.error('Add class members error:', error);
+    return c.json({ error: '클래스 멤버 추가 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
+// 클래스에서 학생 제거
+teacher.delete('/classes/:id/members/:studentId', async (c) => {
+  try {
+    const classId = c.req.param('id');
+    const studentId = c.req.param('studentId');
+    const authHeader = c.req.header('Authorization');
+    const token = authHeader?.substring(7);
+    const payload = JSON.parse(atob(token!.split('.')[1]));
+
+    // 클래스 소유자 확인
+    const classInfo = await c.env.DB.prepare(
+      'SELECT id FROM classes WHERE id = ? AND teacher_id = ?'
+    ).bind(classId, payload.userId).first();
+
+    if (!classInfo) {
+      return c.json({ error: '클래스를 찾을 수 없거나 접근 권한이 없습니다.' }, 404);
+    }
+
+    const result = await c.env.DB.prepare(
+      'DELETE FROM class_members WHERE class_id = ? AND student_id = ?'
+    ).bind(classId, studentId).run();
+
+    if (result.changes === 0) {
+      return c.json({ error: '해당 학생이 클래스에 속해있지 않습니다.' }, 404);
+    }
+
+    return c.json({ message: '학생이 클래스에서 제거되었습니다.' });
+
+  } catch (error) {
+    console.error('Remove class member error:', error);
+    return c.json({ error: '클래스 멤버 제거 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
+// 전체 학생 목록 조회 (클래스 멤버 관리용)
+teacher.get('/students', async (c) => {
+  try {
+    const authHeader = c.req.header('Authorization');
+    const token = authHeader?.substring(7);
+    const payload = JSON.parse(atob(token!.split('.')[1]));
+
+    const students = await c.env.DB.prepare(`
+      SELECT id, username, full_name, email, created_at
+      FROM users
+      WHERE role = 'student'
+      ORDER BY full_name, username
+    `).all();
+
+    return c.json({ students: students.results });
+
+  } catch (error) {
+    console.error('Get students error:', error);
+    return c.json({ error: '학생 목록 조회 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
+// 개별 문제 조회 (편집용)
+teacher.get('/problems/:id', async (c) => {
+  try {
+    const problemId = c.req.param('id');
+    const authHeader = c.req.header('Authorization');
+    const token = authHeader?.substring(7);
+    const payload = JSON.parse(atob(token!.split('.')[1]));
+
+    const problem = await c.env.DB.prepare(`
+      SELECT id, title, description, initial_code, expected_output, test_cases, 
+             time_limit, memory_limit, difficulty, created_at
+      FROM problems 
+      WHERE id = ? AND created_by = ?
+    `).bind(problemId, payload.userId).first();
+
+    if (!problem) {
+      return c.json({ error: '문제를 찾을 수 없거나 권한이 없습니다.' }, 404);
+    }
+
+    // test_cases JSON 파싱
+    let parsedTestCases = [];
+    try {
+      parsedTestCases = JSON.parse(problem.test_cases || '[]');
+    } catch (e) {
+      parsedTestCases = [];
+    }
+
+    return c.json({ 
+      problem: {
+        ...problem,
+        test_cases: parsedTestCases
+      }
+    });
+  } catch (error) {
+    console.error('Get problem error:', error);
+    return c.json({ error: '문제 조회 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
+// 문제 수정
+teacher.put('/problems/:id', async (c) => {
+  try {
+    const problemId = c.req.param('id');
+    const problemData: CreateProblemRequest = await c.req.json();
+    
+    const authHeader = c.req.header('Authorization');
+    const token = authHeader?.substring(7);
+    const payload = JSON.parse(atob(token!.split('.')[1]));
+    
+    const { title, description, initial_code, expected_output, test_cases, time_limit, memory_limit, difficulty } = problemData;
+
+    if (!title || !description) {
+      return c.json({ error: '제목과 설명은 필수입니다.' }, 400);
+    }
+
+    // 문제 존재 및 권한 확인
+    const existingProblem = await c.env.DB.prepare(`
+      SELECT id FROM problems WHERE id = ? AND created_by = ?
+    `).bind(problemId, payload.userId).first();
+
+    if (!existingProblem) {
+      return c.json({ error: '문제를 찾을 수 없거나 수정 권한이 없습니다.' }, 404);
+    }
+
+    const result = await c.env.DB.prepare(`
+      UPDATE problems 
+      SET title = ?, description = ?, initial_code = ?, expected_output = ?, 
+          test_cases = ?, time_limit = ?, memory_limit = ?, difficulty = ?
+      WHERE id = ? AND created_by = ?
+    `).bind(
+      title,
+      description,
+      initial_code || '',
+      expected_output || '',
+      JSON.stringify(test_cases || []),
+      time_limit || 30,
+      memory_limit || 128,
+      difficulty || 'easy',
+      problemId,
+      payload.userId
+    ).run();
+
+    if (result.changes === 0) {
+      return c.json({ error: '문제 수정에 실패했습니다.' }, 500);
+    }
+
+    return c.json({ 
+      message: '문제가 성공적으로 수정되었습니다.',
+      problem: {
+        id: problemId,
+        title,
+        description,
+        difficulty: difficulty || 'easy'
+      }
+    });
+
+  } catch (error) {
+    console.error('Update problem error:', error);
+    return c.json({ error: '문제 수정 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
+// 문제 삭제
+teacher.delete('/problems/:id', async (c) => {
+  try {
+    const problemId = c.req.param('id');
+    const authHeader = c.req.header('Authorization');
+    const token = authHeader?.substring(7);
+    const payload = JSON.parse(atob(token!.split('.')[1]));
+
+    // 문제 존재 및 권한 확인
+    const existingProblem = await c.env.DB.prepare(`
+      SELECT id, title FROM problems WHERE id = ? AND created_by = ?
+    `).bind(problemId, payload.userId).first();
+
+    if (!existingProblem) {
+      return c.json({ error: '문제를 찾을 수 없거나 삭제 권한이 없습니다.' }, 404);
+    }
+
+    // 활성 세션에서 사용 중인지 확인
+    const activeSessions = await c.env.DB.prepare(`
+      SELECT id FROM problem_sessions 
+      WHERE problem_id = ? AND status = 'active'
+    `).bind(problemId).first();
+
+    if (activeSessions) {
+      return c.json({ 
+        error: '현재 활성 세션에서 사용 중인 문제는 삭제할 수 없습니다. 먼저 관련 세션을 종료해주세요.' 
+      }, 400);
+    }
+
+    // 관련 데이터 삭제 (foreign key constraints 고려)
+    // 1. 해당 문제를 사용한 세션들의 제출 기록 삭제
+    await c.env.DB.prepare(`
+      DELETE FROM submissions 
+      WHERE session_id IN (
+        SELECT id FROM problem_sessions WHERE problem_id = ?
+      )
+    `).bind(problemId).run();
+
+    // 2. 해당 문제를 사용한 세션 삭제
+    await c.env.DB.prepare(`
+      DELETE FROM problem_sessions WHERE problem_id = ?
+    `).bind(problemId).run();
+
+    // 3. 문제 삭제
+    const result = await c.env.DB.prepare(`
+      DELETE FROM problems WHERE id = ? AND created_by = ?
+    `).bind(problemId, payload.userId).run();
+
+    if (result.changes === 0) {
+      return c.json({ error: '문제 삭제에 실패했습니다.' }, 500);
+    }
+
+    return c.json({ 
+      message: `문제 "${existingProblem.title}"가 성공적으로 삭제되었습니다.` 
+    });
+
+  } catch (error) {
+    console.error('Delete problem error:', error);
+    return c.json({ error: '문제 삭제 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
 // 문제 세션 생성 (실시간 문제 출제)
 teacher.post('/sessions', async (c) => {
   try {
@@ -644,6 +1114,41 @@ teacher.put('/change-password', async (c) => {
   } catch (error) {
     console.error('Change password error:', error);
     return c.json({ error: '비밀번호 변경 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
+// 프로필 업데이트
+teacher.put('/profile', async (c) => {
+  try {
+    const authHeader = c.req.header('Authorization');
+    const token = authHeader?.substring(7);
+    const payload = JSON.parse(atob(token!.split('.')[1]));
+
+    const { full_name, email } = await c.req.json();
+
+    if (!full_name || !email) {
+      return c.json({ error: '이름과 이메일은 필수입니다.' }, 400);
+    }
+
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return c.json({ error: '올바른 이메일 형식이 아닙니다.' }, 400);
+    }
+
+    // 프로필 업데이트
+    await c.env.DB.prepare(
+      'UPDATE users SET full_name = ?, email = ? WHERE id = ?'
+    ).bind(full_name, email, payload.userId).run();
+
+    return c.json({ 
+      message: '프로필이 성공적으로 업데이트되었습니다.',
+      user: { full_name, email }
+    });
+
+  } catch (error) {
+    console.error('Update profile error:', error);
+    return c.json({ error: '프로필 업데이트 중 오류가 발생했습니다.' }, 500);
   }
 });
 

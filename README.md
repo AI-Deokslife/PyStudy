@@ -1,13 +1,17 @@
-# 파이썬 학습 관리 플랫폼
+# EunPyeong Python Education - 파이썬 학습 관리 시스템
 
 ## 프로젝트 개요
-- **이름**: Python Learning Management System
+- **이름**: EunPyeong Python Education
+- **브랜딩**: 은평메디텍고등학교 - 이은덕 선생님
 - **목표**: 교사가 실시간으로 파이썬 문제를 출제하고, 학생들의 코드 실행 결과를 모니터링할 수 있는 학습 관리 시스템
-- **기반**: 은평메디텍고등학교 이은덕 선생님의 파이썬 코드 연습장을 확장
+- **연락처**: 
+  - 📞 070-4020-6832
+  - 📧 deokslife@naver.com
+  - 📱 Instagram: https://www.instagram.com/eunpyeong.smtcoding/
 
 ## 🌐 접속 정보
-- **개발 서버**: https://3000-i3a4otlz37gjylpzbv4em-6532622b.e2b.dev
-- **GitHub**: (별도 설정 필요)
+- **프로덕션**: https://58ccd62e.python-learning-system.pages.dev
+- **GitHub**: https://github.com/AI-Deokslife/PyStudy
 
 ## 👥 사용자 역할 및 계정
 
@@ -15,24 +19,34 @@
 - **계정**: admin / admin123
 - **기능**: 
   - 교사/학생 계정 생성 및 관리
-  - 엑셀 파일을 통한 대량 계정 생성
+  - 클래스 관리 (생성/수정/삭제)
+  - 사용자 관리 테이블에서 클래스 ID 확인
   - 시스템 통계 확인
 
-### 교사 (Teacher)
-- **계정**: teacher1 / teacher123  
-- **기능**:
-  - 문제 생성 및 관리
-  - 실시간 문제 세션 시작/종료
-  - 학생 제출 결과 실시간 모니터링
-  - 클래스별 학생 진도 관리
+### 교사별 클래스 담당
+- **teacher1 (이은덕)**: `teacher1` / `teacher1`
+  - 담당 클래스: **'smt코딩' 클래스만**
+  - 제한된 접근: 본인 담당 클래스만 조회/관리 가능
+  
+- **teacher2 (신선희)**: `teacher2` / `teacher2`
+  - 담당 클래스: **나머지 6개 클래스**
+  - 권한: 본인 담당 클래스들만 접근 가능
+
+### 교사 공통 기능
+- 문제 생성 및 관리 (본인이 생성한 문제만)
+- 실시간 문제 세션 시작/종료
+- 학생 제출 결과 실시간 모니터링
+- 담당 클래스 학생 관리 (추가/제거)
+- 교사 프로필 수정 및 비밀번호 변경
 
 ### 학생 (Student)  
-- **계정**: student1, student2, student3 / student123
+- **계정**: student1 / student1
 - **기능**:
-  - 자유 연습 모드 (기존 Pyodide 환경)
+  - 자유 연습 모드 (Pyodide 환경)
   - 교사가 출제한 문제 확인 및 제출
   - 실시간 문제 알림 수신
   - 개인 제출 기록 확인
+  - 제출 기록 삭제 요청
 
 ## 🏗️ 시스템 아키텍처
 
@@ -149,16 +163,23 @@ npm run dev:d1
    - 필수 컬럼: username, password, full_name, role
    - 선택 컬럼: email, class_id
 
-### 교사 사용법  
-1. teacher1/teacher123로 로그인
-2. 문제 관리에서 새 문제 생성
-3. 실시간 세션에서 문제 세션 시작
-4. 학생 제출 현황을 실시간으로 모니터링
-5. 세션 종료
+### 교사 사용법
+**teacher1 (smt코딩 클래스 담당)**:
+1. teacher1/teacher1로 로그인
+2. 클래스 관리 → 'smt코딩' 클래스만 표시됨
+3. 문제 관리에서 새 문제 생성
+4. 실시간 세션에서 문제 세션 시작
+5. 학생 제출 현황을 실시간으로 모니터링
+6. 세션 종료
+
+**teacher2 (나머지 클래스 담당)**:  
+1. teacher2/teacher2로 로그인
+2. 클래스 관리 → 6개 클래스 표시됨
+3. 동일한 교사 기능 사용 가능
 
 ### 학생 사용법
-1. student1/student123로 로그인  
-2. 자유 연습 탭에서 파이썬 코드 연습
+1. student1/student1로 로그인  
+2. 자유 연습 탭에서 파이썬 코드 연습 (CodeMirror + 문법 하이라이팅)
 3. 새 문제 알림 시 "출제된 문제" 탭으로 이동
 4. 문제 확인 후 코드 작성 및 제출
 5. 제출 기록 탭에서 이전 결과 확인
@@ -174,10 +195,16 @@ npm run dev:d1
 - **Build Tool**: Vite
 
 ## 📝 배포 상태
-- **플랫폼**: Cloudflare Pages (배포 예정)
-- **현재 상태**: ✅ 로컬 개발 완료
+- **플랫폼**: ✅ Cloudflare Pages 배포 완료
+- **프로덕션 URL**: https://58ccd62e.python-learning-system.pages.dev
 - **기술 스택**: Hono + TypeScript + Cloudflare D1
-- **마지막 업데이트**: 2025-09-17
+- **마지막 업데이트**: 2025-09-21
+
+## 🔒 보안 및 권한 관리
+- **JWT 인증**: verifyAuth 함수로 모든 API 엔드포인트 보안
+- **교사별 클래스 접근 제한**: 각 교사는 담당 클래스만 접근 가능
+- **클래스 멤버 관리**: 해당 클래스에 속하지 않은 학생만 추가 가능
+- **데이터 격리**: 교사간 데이터 완전 분리
 
 ## 🔄 향후 개선 계획
 

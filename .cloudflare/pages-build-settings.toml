@@ -1,0 +1,8 @@
+# Cloudflare Pages 빌드 설정
+[build]
+command = "npm run build"
+destination = "./dist"
+
+[build.environment]
+NODE_VERSION = "18"
+NPM_VERSION = "10"

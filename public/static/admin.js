@@ -69,16 +69,17 @@ class AdminDashboard {
             <!-- 모바일 오버레이 -->
             <div id="mobile-overlay" class="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30 hidden"></div>
             
-            <header class="bg-gray-800 shadow-lg sticky top-0 z-40">
+            <header class="gradient-header shadow-lg sticky top-0 z-40">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between items-center h-16">
                         <div class="flex items-center">
                             <div class="md:hidden w-8"></div> <!-- 모바일 메뉴 버튼 공간 확보 -->
-                            <i class="fas fa-user-shield text-xl md:text-2xl text-red-400 mr-2 md:mr-3"></i>
-                            <h1 class="text-lg md:text-xl font-semibold text-white">관리자 대시보드</h1>
+                            <i class="fas fa-user-shield text-xl md:text-2xl text-yellow-300 mr-2 md:mr-3"></i>
+                            <h1 class="text-lg md:text-xl font-bold text-white">EunPyeong Python Education</h1>
+                            <span class="ml-3 text-sm text-yellow-200">관리자</span>
                         </div>
                         <div class="flex items-center space-x-2 md:space-x-4">
-                            <span class="text-gray-300 text-sm md:text-base hidden sm:inline">${this.user.full_name}</span>
+                            <span class="text-gray-100 text-sm md:text-base hidden sm:inline">${this.user.full_name}</span>
                             <button onclick="adminDashboard.logout()" class="bg-red-600 hover:bg-red-700 px-2 md:px-4 py-2 rounded text-white text-sm md:text-base">
                                 <i class="fas fa-sign-out-alt mr-1 md:mr-2"></i><span class="hidden sm:inline">로그아웃</span>
                             </button>
@@ -107,35 +108,72 @@ class AdminDashboard {
     
     renderNavigation() {
         const navigationHTML = `
+            <!-- 프로필 섹션 -->
+            <div class="p-6 border-b border-gray-100">
+                <div class="flex items-center">
+                    <div class="bg-emerald-100 rounded-full p-3 mr-4">
+                        <i class="fas fa-user-shield text-emerald-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-gray-800">${this.user.full_name}</div>
+                        <div class="text-sm text-emerald-600">관리자</div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="p-4 md:p-6">
                 <ul class="space-y-2">
                     <li>
                         <button onclick="adminDashboard.showUserManagement(); adminDashboard.closeMobileMenu();" 
-                                class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
-                            <i class="fas fa-users mr-3"></i>사용자 관리
+                                class="nav-item w-full text-left flex items-center px-4 py-3 text-gray-700 rounded-lg transition-all">
+                            <div class="bg-blue-100 p-2 rounded-lg mr-3">
+                                <i class="fas fa-users text-blue-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium">사용자 관리</div>
+                                <div class="text-xs text-gray-500">사용자 계정 관리</div>
+                            </div>
                         </button>
                     </li>
                     <li>
                         <button onclick="adminDashboard.showClassManagement(); adminDashboard.closeMobileMenu();" 
-                                class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
-                            <i class="fas fa-school mr-3"></i>클래스 관리
+                                class="nav-item w-full text-left flex items-center px-4 py-3 text-gray-700 rounded-lg transition-all">
+                            <div class="bg-green-100 p-2 rounded-lg mr-3">
+                                <i class="fas fa-school text-green-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium">클래스 관리</div>
+                                <div class="text-xs text-gray-500">클래스 현황 및 관리</div>
+                            </div>
                         </button>
                     </li>
                     <li>
                         <button onclick="adminDashboard.showBulkUserCreate(); adminDashboard.closeMobileMenu();" 
-                                class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
-                            <i class="fas fa-file-excel mr-3"></i>엑셀로 계정 생성
+                                class="nav-item w-full text-left flex items-center px-4 py-3 text-gray-700 rounded-lg transition-all">
+                            <div class="bg-purple-100 p-2 rounded-lg mr-3">
+                                <i class="fas fa-file-excel text-purple-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium">엑셀로 계정 생성</div>
+                                <div class="text-xs text-gray-500">일괄 계정 생성</div>
+                            </div>
                         </button>
                     </li>
                     <li>
                         <button onclick="adminDashboard.showSystemStats(); adminDashboard.closeMobileMenu();" 
-                                class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
-                            <i class="fas fa-chart-bar mr-3"></i>시스템 통계
+                                class="nav-item w-full text-left flex items-center px-4 py-3 text-gray-700 rounded-lg transition-all">
+                            <div class="bg-orange-100 p-2 rounded-lg mr-3">
+                                <i class="fas fa-chart-bar text-orange-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium">시스템 통계</div>
+                                <div class="text-xs text-gray-500">사용 현황 및 통계</div>
+                            </div>
                         </button>
                     </li>
-                    <li class="border-t border-gray-600 pt-2 mt-2">
+                    <li class="border-t border-gray-200 pt-4 mt-4">
                         <button onclick="adminDashboard.showChangePassword(); adminDashboard.closeMobileMenu();" 
-                                class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
+                                class="nav-item w-full text-left flex items-center px-4 py-3 text-gray-700 rounded-lg transition-all">
                             <i class="fas fa-key mr-3"></i>비밀번호 변경
                         </button>
                     </li>

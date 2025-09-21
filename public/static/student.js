@@ -73,20 +73,21 @@ class StudentEnvironment {
     renderHeader() {
         const app = document.getElementById('app');
         app.innerHTML = `
-            <header class="bg-gray-800 shadow-lg sticky top-0 z-40">
+            <header class="gradient-header shadow-lg sticky top-0 z-40">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between items-center h-16">
                         <div class="flex items-center">
-                            <i class="fas fa-user-graduate text-lg md:text-2xl text-green-400 mr-2 md:mr-3"></i>
-                            <h1 class="text-sm md:text-xl font-semibold text-white">파이썬 학습 환경</h1>
+                            <i class="fas fa-user-graduate text-lg md:text-2xl text-yellow-300 mr-2 md:mr-3"></i>
+                            <h1 class="text-sm md:text-xl font-bold text-white">EunPyeong Python Education</h1>
+                            <span class="ml-3 text-xs md:text-sm text-yellow-200">파이썬 학습 환경</span>
                         </div>
                         <div class="flex items-center space-x-2 md:space-x-4">
                             <div id="session-indicator" class="hidden sm:flex items-center">
-                                <div class="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
-                                <span class="text-gray-400 text-xs md:text-sm">세션 확인 중...</span>
+                                <div class="w-2 h-2 bg-gray-300 rounded-full mr-2"></div>
+                                <span class="text-gray-200 text-xs md:text-sm">세션 확인 중...</span>
                             </div>
-                            <span class="text-gray-300 text-xs md:text-sm hidden lg:inline">${this.user.full_name} (${this.user.class_id || '클래스 미지정'})</span>
-                            <button onclick="studentEnv.logout()" class="bg-red-600 hover:bg-red-700 px-2 md:px-4 py-2 rounded text-white text-xs md:text-sm">
+                            <span class="text-gray-100 text-xs md:text-sm hidden lg:inline">${this.user.full_name} (${this.user.class_id || '클래스 미지정'})</span>
+                            <button onclick="studentEnv.logout()" class="bg-red-500 hover:bg-red-600 px-2 md:px-4 py-2 rounded text-white text-xs md:text-sm transition-colors">
                                 <i class="fas fa-sign-out-alt mr-1 md:mr-2"></i><span class="hidden sm:inline">로그아웃</span>
                             </button>
                         </div>
@@ -94,7 +95,7 @@ class StudentEnvironment {
                 </div>
             </header>
             
-            <main id="main-content" class="min-h-screen bg-gray-900">
+            <main id="main-content" class="min-h-screen bg-gray-50">
                 <!-- 메인 콘텐츠 -->
             </main>
         `;
@@ -133,21 +134,21 @@ class StudentEnvironment {
 
             <div class="container mx-auto p-2 md:p-4 max-w-7xl">
                 <!-- 탭 네비게이션 -->
-                <div class="flex mb-4 md:mb-6 bg-gray-800 rounded-lg p-1 md:p-2 overflow-x-auto">
+                <div class="flex mb-4 md:mb-6 bg-white rounded-lg p-1 md:p-2 overflow-x-auto shadow-lg border border-gray-200">
                     <button id="tab-practice" onclick="studentEnv.switchTab('practice')" 
-                            class="flex-1 py-2 px-2 md:px-4 text-center rounded bg-cyan-600 text-white font-semibold whitespace-nowrap text-xs md:text-sm">
+                            class="flex-1 py-2 px-2 md:px-4 text-center rounded bg-emerald-500 text-white font-semibold whitespace-nowrap text-xs md:text-sm transition-colors">
                         <i class="fas fa-code mr-1 md:mr-2"></i><span class="hidden sm:inline">자유 </span>연습
                     </button>
                     <button id="tab-problem" onclick="studentEnv.switchTab('problem')" 
-                            class="flex-1 py-2 px-2 md:px-4 text-center rounded text-gray-300 hover:bg-gray-700 whitespace-nowrap text-xs md:text-sm">
+                            class="flex-1 py-2 px-2 md:px-4 text-center rounded text-gray-600 hover:bg-gray-100 whitespace-nowrap text-xs md:text-sm transition-colors">
                         <i class="fas fa-tasks mr-1 md:mr-2"></i><span class="hidden sm:inline">출제된 </span>문제
                     </button>
                     <button id="tab-history" onclick="studentEnv.switchTab('history')" 
-                            class="flex-1 py-2 px-2 md:px-4 text-center rounded text-gray-300 hover:bg-gray-700 whitespace-nowrap text-xs md:text-sm">
+                            class="flex-1 py-2 px-2 md:px-4 text-center rounded text-gray-600 hover:bg-gray-100 whitespace-nowrap text-xs md:text-sm transition-colors">
                         <i class="fas fa-history mr-1 md:mr-2"></i><span class="hidden sm:inline">제출 </span>기록
                     </button>
                     <button id="tab-settings" onclick="studentEnv.switchTab('settings')" 
-                            class="flex-1 py-2 px-2 md:px-4 text-center rounded text-gray-300 hover:bg-gray-700 whitespace-nowrap text-xs md:text-sm">
+                            class="flex-1 py-2 px-2 md:px-4 text-center rounded text-gray-600 hover:bg-gray-100 whitespace-nowrap text-xs md:text-sm transition-colors">
                         <i class="fas fa-cog mr-1 md:mr-2"></i><span class="hidden sm:inline">계정 </span>설정
                     </button>
                 </div>
@@ -156,63 +157,63 @@ class StudentEnvironment {
                 <div id="practice-tab" class="tab-content">
                     <div class="flex flex-col gap-4 md:gap-6 min-h-[calc(100vh-200px)]">
                         <!-- 코드 에디터 섹션 -->
-                        <div class="flex flex-col bg-gray-800 rounded-lg shadow-lg">
+                        <div class="flex flex-col bg-white rounded-lg shadow-lg border border-gray-200">
                             <div class="flex-1 flex flex-col">
-                                <div class="p-2 md:p-3 bg-gray-700 rounded-t-lg border-b border-gray-600">
-                                    <h2 class="text-base md:text-lg font-semibold text-white">코딩 영역</h2>
+                                <div class="p-2 md:p-3 bg-emerald-50 rounded-t-lg border-b border-gray-200">
+                                    <h2 class="text-base md:text-lg font-semibold text-gray-800">코딩 영역</h2>
                                 </div>
-                                <textarea id="code-editor" class="w-full h-48 md:h-64 lg:h-80 p-3 md:p-4 bg-gray-900 text-green-300 font-mono text-sm md:text-base focus:outline-none resize-none" spellcheck="false"></textarea>
+                                <textarea id="code-editor" class="w-full h-48 md:h-64 lg:h-80 p-3 md:p-4 bg-gray-800 text-green-300 font-mono text-sm md:text-base focus:outline-none resize-none border-none" spellcheck="false"></textarea>
                             </div>
-                            <div class="p-2 md:p-3 bg-gray-700 border-t border-gray-500 flex flex-col gap-2 md:gap-3">
+                            <div class="p-2 md:p-3 bg-gray-50 border-t border-gray-200 flex flex-col gap-2 md:gap-3">
                                 <!-- 모바일: 버튼을 2x2 그리드로 배치 -->
                                 <div class="grid grid-cols-2 gap-2 md:hidden">
-                                    <button id="run-btn" disabled class="bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-2 rounded-md transition duration-300 disabled:bg-gray-500 disabled:cursor-not-allowed text-xs">
+                                    <button id="run-btn" disabled class="bg-emerald-500 hover:bg-emerald-600 text-white py-2 px-2 rounded-md transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed text-xs shadow-md">
                                         <i class="fas fa-play mr-1"></i>실행
                                     </button>
-                                    <button id="clear-code-btn" class="bg-yellow-600 hover:bg-yellow-700 text-white py-2 px-2 rounded-md transition duration-300 text-xs">
+                                    <button id="clear-code-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-2 rounded-md transition duration-300 text-xs shadow-md">
                                         <i class="fas fa-eraser mr-1"></i>삭제
                                     </button>
-                                    <button id="save-file-btn" class="bg-green-600 hover:bg-green-700 text-white py-2 px-2 rounded-md transition duration-300 text-xs">
+                                    <button id="save-file-btn" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-2 rounded-md transition duration-300 text-xs shadow-md">
                                         <i class="fas fa-save mr-1"></i>저장
                                     </button>
-                                    <button id="load-file-btn" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-2 rounded-md transition duration-300 text-xs">
+                                    <button id="load-file-btn" class="bg-purple-500 hover:bg-purple-600 text-white py-2 px-2 rounded-md transition duration-300 text-xs shadow-md">
                                         <i class="fas fa-folder-open mr-1"></i>불러오기
                                     </button>
                                 </div>
                                 
                                 <!-- 데스크톱: 기존 레이아웃 유지 -->
                                 <div class="hidden md:flex gap-3">
-                                    <button id="run-btn-desktop" disabled class="w-1/3 bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-4 rounded-md transition duration-300 disabled:bg-gray-500 disabled:cursor-not-allowed">
+                                    <button id="run-btn-desktop" disabled class="w-1/3 bg-emerald-500 hover:bg-emerald-600 text-white py-2 px-4 rounded-md transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md">
                                         <i class="fas fa-play mr-2"></i>코드 실행
                                     </button>
-                                    <button id="clear-code-btn-desktop" class="w-1/3 bg-yellow-600 hover:bg-yellow-700 text-white py-2 px-4 rounded-md transition duration-300">
+                                    <button id="clear-code-btn-desktop" class="w-1/3 bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-md transition duration-300 shadow-md">
                                         <i class="fas fa-eraser mr-2"></i>코드 삭제
                                     </button>
-                                    <button id="clear-output-btn-desktop" class="w-1/3 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-md transition duration-300">
+                                    <button id="clear-output-btn-desktop" class="w-1/3 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md transition duration-300 shadow-md">
                                         <i class="fas fa-trash mr-2"></i>결과 삭제
                                     </button>
                                 </div>
                                 <div class="hidden md:flex gap-3">
-                                    <button id="save-file-btn-desktop" class="w-1/2 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md transition duration-300">
+                                    <button id="save-file-btn-desktop" class="w-1/2 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md transition duration-300 shadow-md">
                                         <i class="fas fa-save mr-2"></i>파일로 저장
                                     </button>
-                                    <button id="load-file-btn-desktop" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition duration-300">
+                                    <button id="load-file-btn-desktop" class="w-1/2 bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-md transition duration-300 shadow-md">
                                         <i class="fas fa-folder-open mr-2"></i>파일 불러오기
                                     </button>
                                 </div>
-                                <span id="status-message" class="text-center text-xs md:text-sm text-gray-400 h-4 transition-opacity duration-500 opacity-0"></span>
+                                <span id="status-message" class="text-center text-xs md:text-sm text-gray-600 h-4 transition-opacity duration-500 opacity-0"></span>
                             </div>
                         </div>
 
                         <!-- 실행 결과 섹션 -->
-                        <div class="flex flex-col bg-gray-800 rounded-lg shadow-lg">
-                            <div class="p-2 md:p-3 bg-gray-700 rounded-t-lg border-b border-gray-600 flex items-center justify-between">
-                                <h2 class="text-base md:text-lg font-semibold text-white">실행 결과</h2>
-                                <button id="clear-output-btn-mobile" class="md:hidden bg-red-600 hover:bg-red-700 text-white py-1 px-2 rounded text-xs">
+                        <div class="flex flex-col bg-white rounded-lg shadow-lg border border-gray-200">
+                            <div class="p-2 md:p-3 bg-emerald-50 rounded-t-lg border-b border-gray-200 flex items-center justify-between">
+                                <h2 class="text-base md:text-lg font-semibold text-gray-800">실행 결과</h2>
+                                <button id="clear-output-btn-mobile" class="md:hidden bg-red-500 hover:bg-red-600 text-white py-1 px-2 rounded text-xs transition-colors">
                                     <i class="fas fa-trash mr-1"></i>삭제
                                 </button>
                             </div>
-                            <pre id="output" class="w-full h-48 md:h-64 p-3 md:p-4 bg-gray-900 text-white font-mono text-xs md:text-base overflow-auto whitespace-pre-wrap break-words">결과는 여기에 표시됩니다.</pre>
+                            <pre id="output" class="w-full h-48 md:h-64 p-3 md:p-4 bg-gray-800 text-green-300 font-mono text-xs md:text-base overflow-auto whitespace-pre-wrap break-words">결과는 여기에 표시됩니다.</pre>
                         </div>
                     </div>
                 </div>
@@ -220,9 +221,9 @@ class StudentEnvironment {
                 <!-- 문제 탭 -->
                 <div id="problem-tab" class="tab-content hidden">
                     <div id="problem-content">
-                        <div class="text-center py-12 bg-gray-800 rounded-lg">
-                            <i class="fas fa-tasks text-4xl text-gray-400 mb-4"></i>
-                            <p class="text-gray-400">현재 출제된 문제가 없습니다.</p>
+                        <div class="text-center py-12 bg-white rounded-lg border border-gray-200 shadow-lg">
+                            <i class="fas fa-tasks text-4xl text-emerald-400 mb-4"></i>
+                            <p class="text-gray-600">현재 출제된 문제가 없습니다.</p>
                         </div>
                     </div>
                 </div>

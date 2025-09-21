@@ -613,8 +613,11 @@ student.put('/change-password', async (c) => {
     
     if (user.password_hash && user.password_hash.startsWith('$2a$')) {
       // bcrypt 해시된 비밀번호인 경우, 일단 에러 처리
-      // Cloudflare Workers에서는 bcrypt 사용 불가
       return c.json({ error: 'bcrypt로 해시된 비밀번호는 현재 변경할 수 없습니다. 관리자에게 문의하세요.' }, 400);
+    } else if (user.password_hash && user.password_hash.length === 64 && /^[a-f0-9]+$/.test(user.password_hash)) {
+      // SHA-256 해시된 비밀번호인 경우
+      const { verifyPassword } = await import('../utils/auth');
+      isCurrentPasswordValid = await verifyPassword(currentPassword, user.password_hash);
     } else {
       // 평문 비밀번호
       isCurrentPasswordValid = (currentPassword === user.password_hash);

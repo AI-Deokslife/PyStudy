@@ -22,16 +22,18 @@ auth.post('/login', async (c) => {
       return c.json({ error: '사용자를 찾을 수 없습니다.' }, 401);
     }
 
-    // 비밀번호 확인 (하이브리드 방식: 해시 우선, 실패시 평문 비교)
+    // 비밀번호 확인 (하이브리드 방식: 다양한 해시 형식 지원)
     let isValidPassword = false;
     
     try {
-      // 먼저 해시된 비밀번호 확인 시도
       if (user.password_hash && user.password_hash.startsWith('$2a$')) {
-        // bcrypt 해시인 경우 해시 비교
+        // bcrypt 해시인 경우 (현재는 사용하지 않음)
+        isValidPassword = await verifyPassword(password, user.password_hash);
+      } else if (user.password_hash && user.password_hash.length === 64 && /^[a-f0-9]+$/.test(user.password_hash)) {
+        // SHA-256 해시인 경우 (새로 생성된 계정들)
         isValidPassword = await verifyPassword(password, user.password_hash);
       } else {
-        // 평문 비밀번호인 경우 직접 비교 (레거시 계정 또는 테스트 계정)
+        // 평문 비밀번호인 경우 (테스트 계정들)
         isValidPassword = (password === user.password_hash);
       }
     } catch (error) {

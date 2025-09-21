@@ -577,4 +577,68 @@ student.get('/deletion-requests', async (c) => {
   }
 });
 
+// 학생 비밀번호 변경
+student.put('/change-password', async (c) => {
+  try {
+    const authHeader = c.req.header('Authorization');
+    const token = authHeader?.substring(7);
+    const payload = JSON.parse(atob(token!.split('.')[1]));
+
+    const { currentPassword, newPassword, confirmPassword } = await c.req.json();
+
+    // 입력 유효성 검사
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return c.json({ error: '모든 필드를 입력해주세요.' }, 400);
+    }
+
+    if (newPassword !== confirmPassword) {
+      return c.json({ error: '새 비밀번호와 확인 비밀번호가 일치하지 않습니다.' }, 400);
+    }
+
+    if (newPassword.length < 4) {
+      return c.json({ error: '새 비밀번호는 최소 4자 이상이어야 합니다.' }, 400);
+    }
+
+    // 현재 사용자 정보 조회
+    const user = await c.env.DB.prepare(
+      'SELECT id, password_hash FROM users WHERE id = ?'
+    ).bind(payload.userId).first();
+
+    if (!user) {
+      return c.json({ error: '사용자를 찾을 수 없습니다.' }, 404);
+    }
+
+    // 현재 비밀번호 확인 (하이브리드 방식)
+    let isCurrentPasswordValid = false;
+    
+    if (user.password_hash && user.password_hash.startsWith('$2a$')) {
+      // bcrypt 해시된 비밀번호인 경우, 일단 에러 처리
+      // Cloudflare Workers에서는 bcrypt 사용 불가
+      return c.json({ error: 'bcrypt로 해시된 비밀번호는 현재 변경할 수 없습니다. 관리자에게 문의하세요.' }, 400);
+    } else {
+      // 평문 비밀번호
+      isCurrentPasswordValid = (currentPassword === user.password_hash);
+    }
+
+    if (!isCurrentPasswordValid) {
+      return c.json({ error: '현재 비밀번호가 올바르지 않습니다.' }, 401);
+    }
+
+    // 새 비밀번호 해시화 (Web Crypto API 사용)
+    const { hashPassword } = await import('../utils/auth');
+    const hashedNewPassword = await hashPassword(newPassword);
+
+    // 비밀번호 업데이트
+    await c.env.DB.prepare(
+      'UPDATE users SET password_hash = ? WHERE id = ?'
+    ).bind(hashedNewPassword, payload.userId).run();
+
+    return c.json({ message: '비밀번호가 성공적으로 변경되었습니다.' });
+
+  } catch (error) {
+    console.error('Change password error:', error);
+    return c.json({ error: '비밀번호 변경 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
 export default student;

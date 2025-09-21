@@ -146,6 +146,10 @@ class StudentEnvironment {
                             class="flex-1 py-2 px-2 md:px-4 text-center rounded text-gray-300 hover:bg-gray-700 whitespace-nowrap text-xs md:text-sm">
                         <i class="fas fa-history mr-1 md:mr-2"></i><span class="hidden sm:inline">제출 </span>기록
                     </button>
+                    <button id="tab-settings" onclick="studentEnv.switchTab('settings')" 
+                            class="flex-1 py-2 px-2 md:px-4 text-center rounded text-gray-300 hover:bg-gray-700 whitespace-nowrap text-xs md:text-sm">
+                        <i class="fas fa-cog mr-1 md:mr-2"></i><span class="hidden sm:inline">계정 </span>설정
+                    </button>
                 </div>
 
                 <!-- 자유 연습 탭 -->
@@ -232,6 +236,72 @@ class StudentEnvironment {
                                 <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
                                 <p class="text-gray-400 mt-2">제출 기록을 불러오는 중...</p>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 계정 설정 탭 -->
+                <div id="settings-tab" class="tab-content hidden">
+                    <div class="bg-gray-800 rounded-lg shadow-xl p-6">
+                        <h2 class="text-2xl font-bold text-white mb-6">계정 설정</h2>
+                        
+                        <!-- 계정 정보 -->
+                        <div class="mb-8">
+                            <h3 class="text-lg font-semibold text-white mb-4">계정 정보</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-1">아이디</label>
+                                    <input type="text" value="${this.user.username}" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-400" readonly>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-1">이름</label>
+                                    <input type="text" value="${this.user.full_name}" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-400" readonly>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-1">클래스</label>
+                                    <input type="text" value="${this.user.class_id || '미지정'}" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-400" readonly>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-1">역할</label>
+                                    <input type="text" value="학생" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-400" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 비밀번호 변경 -->
+                        <div class="border-t border-gray-600 pt-6">
+                            <h3 class="text-lg font-semibold text-white mb-4">비밀번호 변경</h3>
+                            <form id="change-password-form" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-1">현재 비밀번호</label>
+                                    <input type="password" id="current-password" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-white" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-1">새 비밀번호 (최소 4자)</label>
+                                    <input type="password" id="new-password" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-white" minlength="4" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-1">새 비밀번호 확인</label>
+                                    <input type="password" id="confirm-password" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-white" minlength="4" required>
+                                </div>
+                                
+                                <!-- 비밀번호 강도 표시 -->
+                                <div id="password-strength" class="hidden">
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="text-gray-400">비밀번호 강도:</span>
+                                        <span id="strength-text" class="font-medium"></span>
+                                    </div>
+                                    <div class="w-full bg-gray-600 rounded-full h-1 mt-1">
+                                        <div id="strength-bar" class="h-1 rounded-full transition-all duration-300"></div>
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-end">
+                                    <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors duration-200">
+                                        비밀번호 변경
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -490,6 +560,8 @@ for i in range(1, 4):
             this.loadCurrentProblem();
         } else if (tabName === 'history') {
             this.loadSubmissionHistory();
+        } else if (tabName === 'settings') {
+            this.setupPasswordChangeForm();
         }
     }
     
@@ -1124,6 +1196,147 @@ for i in range(1, 4):
                 modal.remove();
             }
         }, 3000);
+    }
+
+    setupPasswordChangeForm() {
+        const form = document.getElementById('change-password-form');
+        const newPasswordInput = document.getElementById('new-password');
+        const confirmPasswordInput = document.getElementById('confirm-password');
+        
+        if (!form) return;
+        
+        // 비밀번호 강도 검사
+        newPasswordInput.addEventListener('input', () => {
+            this.checkPasswordStrength(newPasswordInput.value);
+        });
+        
+        // 비밀번호 확인 검사
+        confirmPasswordInput.addEventListener('input', () => {
+            this.checkPasswordMatch();
+        });
+        
+        // 폼 제출 처리
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.changePassword();
+        });
+    }
+    
+    checkPasswordStrength(password) {
+        const strengthDiv = document.getElementById('password-strength');
+        const strengthBar = document.getElementById('strength-bar');
+        const strengthText = document.getElementById('strength-text');
+        
+        if (password.length === 0) {
+            strengthDiv.classList.add('hidden');
+            return;
+        }
+        
+        strengthDiv.classList.remove('hidden');
+        
+        let strength = 0;
+        let text = '';
+        let color = '';
+        
+        if (password.length >= 4) strength += 1;
+        if (password.length >= 8) strength += 1;
+        if (/[A-Z]/.test(password)) strength += 1;
+        if (/[0-9]/.test(password)) strength += 1;
+        if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+        
+        switch (strength) {
+            case 0:
+            case 1:
+                text = '약함';
+                color = 'bg-red-500';
+                break;
+            case 2:
+            case 3:
+                text = '보통';
+                color = 'bg-yellow-500';
+                break;
+            case 4:
+            case 5:
+                text = '강함';
+                color = 'bg-green-500';
+                break;
+        }
+        
+        strengthText.textContent = text;
+        strengthText.className = `font-medium text-${color.split('-')[1]}-400`;
+        strengthBar.className = `h-1 rounded-full transition-all duration-300 ${color}`;
+        strengthBar.style.width = `${(strength / 5) * 100}%`;
+    }
+    
+    checkPasswordMatch() {
+        const newPassword = document.getElementById('new-password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        const confirmInput = document.getElementById('confirm-password');
+        
+        if (confirmPassword.length === 0) {
+            confirmInput.classList.remove('border-red-500', 'border-green-500');
+            return;
+        }
+        
+        if (newPassword === confirmPassword) {
+            confirmInput.classList.remove('border-red-500');
+            confirmInput.classList.add('border-green-500');
+        } else {
+            confirmInput.classList.remove('border-green-500');
+            confirmInput.classList.add('border-red-500');
+        }
+    }
+    
+    async changePassword() {
+        const currentPassword = document.getElementById('current-password').value;
+        const newPassword = document.getElementById('new-password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        
+        // 유효성 검사
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            this.showNotificationModal('error', '입력 오류', '모든 필드를 입력해주세요.');
+            return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+            this.showNotificationModal('error', '비밀번호 불일치', '새 비밀번호와 확인 비밀번호가 일치하지 않습니다.');
+            return;
+        }
+        
+        if (newPassword.length < 4) {
+            this.showNotificationModal('error', '비밀번호 길이', '새 비밀번호는 최소 4자 이상이어야 합니다.');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/student/change-password', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify({
+                    currentPassword,
+                    newPassword,
+                    confirmPassword
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.showNotificationModal('success', '변경 완료', data.message);
+                // 폼 초기화
+                document.getElementById('change-password-form').reset();
+                document.getElementById('password-strength').classList.add('hidden');
+                document.getElementById('confirm-password').classList.remove('border-red-500', 'border-green-500');
+            } else {
+                this.showNotificationModal('error', '변경 실패', data.error);
+            }
+        } catch (error) {
+            console.error('Change password error:', error);
+            this.showNotificationModal('error', '오류 발생', '서버 연결에 실패했습니다.');
+        }
     }
 }
 

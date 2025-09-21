@@ -147,6 +147,12 @@ class TeacherDashboard {
                             <span id="pending-requests-badge" class="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1 hidden">0</span>
                         </button>
                     </li>
+                    <li>
+                        <button onclick="teacherDashboard.showAccountSettings(); teacherDashboard.closeMobileMenu();" 
+                                class="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white rounded">
+                            <i class="fas fa-cog mr-3"></i>계정 설정
+                        </button>
+                    </li>
                 </ul>
             </div>
         `;
@@ -1781,6 +1787,219 @@ class TeacherDashboard {
                 notification.remove();
             }
         }, 5000);
+    }
+
+    showAccountSettings() {
+        this.stopPolling();
+        
+        const mainContent = document.getElementById('main-content');
+        mainContent.innerHTML = `
+            <div class="bg-gray-800 rounded-lg shadow-xl p-6">
+                <h2 class="text-2xl font-bold text-white mb-6">계정 설정</h2>
+                
+                <!-- 계정 정보 -->
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-white mb-4">계정 정보</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">아이디</label>
+                            <input type="text" value="${this.user.username}" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-400" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">이름</label>
+                            <input type="text" value="${this.user.full_name}" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-400" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">역할</label>
+                            <input type="text" value="교사" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-400" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">이메일</label>
+                            <input type="text" value="${this.user.email || '미등록'}" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-gray-400" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 비밀번호 변경 -->
+                <div class="border-t border-gray-600 pt-6">
+                    <h3 class="text-lg font-semibold text-white mb-4">비밀번호 변경</h3>
+                    <form id="teacher-change-password-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">현재 비밀번호</label>
+                            <input type="password" id="teacher-current-password" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-white" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">새 비밀번호 (최소 4자)</label>
+                            <input type="password" id="teacher-new-password" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-white" minlength="4" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-1">새 비밀번호 확인</label>
+                            <input type="password" id="teacher-confirm-password" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-white" minlength="4" required>
+                        </div>
+                        
+                        <!-- 비밀번호 강도 표시 -->
+                        <div id="teacher-password-strength" class="hidden">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-gray-400">비밀번호 강도:</span>
+                                <span id="teacher-strength-text" class="font-medium"></span>
+                            </div>
+                            <div class="w-full bg-gray-600 rounded-full h-1 mt-1">
+                                <div id="teacher-strength-bar" class="h-1 rounded-full transition-all duration-300"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors duration-200">
+                                비밀번호 변경
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        
+        this.setupTeacherPasswordChangeForm();
+    }
+    
+    setupTeacherPasswordChangeForm() {
+        const form = document.getElementById('teacher-change-password-form');
+        const newPasswordInput = document.getElementById('teacher-new-password');
+        const confirmPasswordInput = document.getElementById('teacher-confirm-password');
+        
+        if (!form) return;
+        
+        // 비밀번호 강도 검사
+        newPasswordInput.addEventListener('input', () => {
+            this.checkTeacherPasswordStrength(newPasswordInput.value);
+        });
+        
+        // 비밀번호 확인 검사
+        confirmPasswordInput.addEventListener('input', () => {
+            this.checkTeacherPasswordMatch();
+        });
+        
+        // 폼 제출 처리
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.changeTeacherPassword();
+        });
+    }
+    
+    checkTeacherPasswordStrength(password) {
+        const strengthDiv = document.getElementById('teacher-password-strength');
+        const strengthBar = document.getElementById('teacher-strength-bar');
+        const strengthText = document.getElementById('teacher-strength-text');
+        
+        if (password.length === 0) {
+            strengthDiv.classList.add('hidden');
+            return;
+        }
+        
+        strengthDiv.classList.remove('hidden');
+        
+        let strength = 0;
+        let text = '';
+        let color = '';
+        
+        if (password.length >= 4) strength += 1;
+        if (password.length >= 8) strength += 1;
+        if (/[A-Z]/.test(password)) strength += 1;
+        if (/[0-9]/.test(password)) strength += 1;
+        if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+        
+        switch (strength) {
+            case 0:
+            case 1:
+                text = '약함';
+                color = 'bg-red-500';
+                break;
+            case 2:
+            case 3:
+                text = '보통';
+                color = 'bg-yellow-500';
+                break;
+            case 4:
+            case 5:
+                text = '강함';
+                color = 'bg-green-500';
+                break;
+        }
+        
+        strengthText.textContent = text;
+        strengthText.className = `font-medium text-${color.split('-')[1]}-400`;
+        strengthBar.className = `h-1 rounded-full transition-all duration-300 ${color}`;
+        strengthBar.style.width = `${(strength / 5) * 100}%`;
+    }
+    
+    checkTeacherPasswordMatch() {
+        const newPassword = document.getElementById('teacher-new-password').value;
+        const confirmPassword = document.getElementById('teacher-confirm-password').value;
+        const confirmInput = document.getElementById('teacher-confirm-password');
+        
+        if (confirmPassword.length === 0) {
+            confirmInput.classList.remove('border-red-500', 'border-green-500');
+            return;
+        }
+        
+        if (newPassword === confirmPassword) {
+            confirmInput.classList.remove('border-red-500');
+            confirmInput.classList.add('border-green-500');
+        } else {
+            confirmInput.classList.remove('border-green-500');
+            confirmInput.classList.add('border-red-500');
+        }
+    }
+    
+    async changeTeacherPassword() {
+        const currentPassword = document.getElementById('teacher-current-password').value;
+        const newPassword = document.getElementById('teacher-new-password').value;
+        const confirmPassword = document.getElementById('teacher-confirm-password').value;
+        
+        // 유효성 검사
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            this.showNotification('error', '모든 필드를 입력해주세요.');
+            return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+            this.showNotification('error', '새 비밀번호와 확인 비밀번호가 일치하지 않습니다.');
+            return;
+        }
+        
+        if (newPassword.length < 4) {
+            this.showNotification('error', '새 비밀번호는 최소 4자 이상이어야 합니다.');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/teacher/change-password', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.token}`
+                },
+                body: JSON.stringify({
+                    currentPassword,
+                    newPassword,
+                    confirmPassword
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.showNotification('success', data.message);
+                // 폼 초기화
+                document.getElementById('teacher-change-password-form').reset();
+                document.getElementById('teacher-password-strength').classList.add('hidden');
+                document.getElementById('teacher-confirm-password').classList.remove('border-red-500', 'border-green-500');
+            } else {
+                this.showNotification('error', data.error);
+            }
+        } catch (error) {
+            console.error('Change password error:', error);
+            this.showNotification('error', '서버 연결에 실패했습니다.');
+        }
     }
 }
 

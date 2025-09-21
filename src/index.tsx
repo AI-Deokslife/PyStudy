@@ -213,7 +213,7 @@ app.get('/', (c) => {
         <footer class="bg-white py-6">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                 <div class="text-gray-600 text-sm">
-                    © 2024 EunPyeong Python Education. 은평메디텍고등학교 - 이은덕 선생님
+                    © 2025 EunPyeong Python Education. 은평메디텍고등학교 - 이은덕 선생님
                 </div>
             </div>
         </footer>

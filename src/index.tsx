@@ -391,6 +391,12 @@ app.get('/student', (c) => {
         <script src="/static/student.js"></script>
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+            @font-face {
+                font-family: 'SchoolSafetyGoodSupport';
+                src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2307-2@1.0/HakgyoansimBareondotumB.woff2') format('woff2');
+                font-weight: 700;
+                font-display: swap;
+            }
             body {
                 font-family: 'Noto Sans KR', sans-serif;
             }
@@ -399,6 +405,10 @@ app.get('/student', (c) => {
                 font-size: 16px;
                 border-radius: 8px;
                 border: 1px solid #e5e7eb;
+                font-family: 'SchoolSafetyGoodSupport', 'Monaco', 'Consolas', 'Courier New', monospace !important;
+            }
+            .CodeMirror-lines {
+                font-family: 'SchoolSafetyGoodSupport', 'Monaco', 'Consolas', 'Courier New', monospace !important;
             }
             .gradient-header {
                 background: linear-gradient(135deg, #10b981 0%, #047857 100%);

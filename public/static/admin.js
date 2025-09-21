@@ -62,8 +62,8 @@ class AdminDashboard {
         const app = document.getElementById('app');
         app.innerHTML = `
             <!-- 모바일 메뉴 토글 버튼 -->
-            <button id="mobile-menu-toggle" class="md:hidden fixed top-4 left-4 z-50 bg-gray-700 hover:bg-gray-600 p-2 rounded-lg">
-                <i class="fas fa-bars text-white"></i>
+            <button id="mobile-menu-toggle" class="md:hidden fixed top-4 left-4 z-50 bg-white hover:bg-gray-100 p-2 rounded-lg shadow-lg">
+                <i class="fas fa-bars text-gray-700"></i>
             </button>
             
             <!-- 모바일 오버레이 -->
@@ -80,7 +80,7 @@ class AdminDashboard {
                         </div>
                         <div class="flex items-center space-x-2 md:space-x-4">
                             <span class="text-gray-100 text-sm md:text-base hidden sm:inline">${this.user.full_name}</span>
-                            <button onclick="adminDashboard.logout()" class="bg-red-600 hover:bg-red-700 px-2 md:px-4 py-2 rounded text-white text-sm md:text-base">
+                            <button onclick="adminDashboard.logout()" class="bg-red-500 hover:bg-red-600 px-2 md:px-4 py-2 rounded text-white text-sm md:text-base transition-colors">
                                 <i class="fas fa-sign-out-alt mr-1 md:mr-2"></i><span class="hidden sm:inline">로그아웃</span>
                             </button>
                         </div>
@@ -88,14 +88,14 @@ class AdminDashboard {
                 </div>
             </header>
             
-            <div class="flex min-h-screen bg-gray-900">
+            <div class="flex min-h-screen bg-gray-50">
                 <!-- 데스크톱 사이드바 -->
-                <nav id="sidebar" class="hidden md:block w-64 bg-gray-800 shadow-lg">
+                <nav id="sidebar" class="hidden md:block w-80 bg-white shadow-lg border-r border-gray-200">
                     <!-- 네비게이션 메뉴 -->
                 </nav>
                 
                 <!-- 모바일 사이드바 -->
-                <nav id="mobile-sidebar" class="md:hidden fixed left-0 top-0 h-full w-64 bg-gray-800 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out z-40">
+                <nav id="mobile-sidebar" class="md:hidden fixed left-0 top-0 h-full w-80 bg-white shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out z-40">
                     <!-- 네비게이션 메뉴 (모바일) -->
                 </nav>
                 
@@ -174,7 +174,25 @@ class AdminDashboard {
                     <li class="border-t border-gray-200 pt-4 mt-4">
                         <button onclick="adminDashboard.showChangePassword(); adminDashboard.closeMobileMenu();" 
                                 class="nav-item w-full text-left flex items-center px-4 py-3 text-gray-700 rounded-lg transition-all">
-                            <i class="fas fa-key mr-3"></i>비밀번호 변경
+                            <div class="bg-gray-100 p-2 rounded-lg mr-3">
+                                <i class="fas fa-key text-gray-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium">비밀번호 변경</div>
+                                <div class="text-xs text-gray-500">계정 보안 설정</div>
+                            </div>
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick="adminDashboard.logout(); adminDashboard.closeMobileMenu();" 
+                                class="nav-item w-full text-left flex items-center px-4 py-3 text-red-600 rounded-lg transition-all">
+                            <div class="bg-red-100 p-2 rounded-lg mr-3">
+                                <i class="fas fa-sign-out-alt text-red-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium">로그아웃</div>
+                                <div class="text-xs text-red-400">계정에서 나가기</div>
+                            </div>
                         </button>
                     </li>
                 </ul>
@@ -191,10 +209,10 @@ class AdminDashboard {
         const mobileSidebar = document.getElementById('mobile-sidebar');
         if (mobileSidebar) {
             mobileSidebar.innerHTML = `
-                <div class="p-4 border-b border-gray-700">
+                <div class="p-4 border-b border-gray-200 bg-gradient-to-r from-emerald-500 to-emerald-600">
                     <div class="flex items-center justify-between">
-                        <h2 class="text-lg font-semibold text-white">메뉴</h2>
-                        <button onclick="adminDashboard.closeMobileMenu()" class="text-gray-400 hover:text-white">
+                        <h2 class="text-lg font-semibold text-white">EunPyeong Python Education</h2>
+                        <button onclick="adminDashboard.closeMobileMenu()" class="text-white hover:text-gray-200 transition-colors">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>

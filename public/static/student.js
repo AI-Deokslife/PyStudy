@@ -162,7 +162,7 @@ class StudentEnvironment {
                                 <div class="p-2 md:p-3 bg-emerald-50 rounded-t-lg border-b border-gray-200">
                                     <h2 class="text-base md:text-lg font-semibold text-gray-800">코딩 영역</h2>
                                 </div>
-                                <textarea id="code-editor" class="w-full h-48 md:h-64 lg:h-80 p-3 md:p-4 bg-gray-800 text-green-300 font-mono text-sm md:text-base focus:outline-none resize-none border-none" spellcheck="false"></textarea>
+                                <div id="code-editor-container" class="w-full h-48 md:h-64 lg:h-80"></div>
                             </div>
                             <div class="p-2 md:p-3 bg-gray-50 border-t border-gray-200 flex flex-col gap-2 md:gap-3">
                                 <!-- 모바일: 버튼을 2x2 그리드로 배치 -->
@@ -387,23 +387,62 @@ builtins.input = _js_input
             
             // CodeMirror 초기화
             try {
-                this.editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
-                    mode: 'python',
-                    theme: 'dracula',
-                    lineNumbers: true,
-                    indentUnit: 4
-                });
-                this.editor.setValue(`# 파이썬 학습 환경에 오신 것을 환영합니다!
+                const container = document.getElementById('code-editor-container');
+                if (container) {
+                    this.editor = CodeMirror(container, {
+                        mode: 'python',
+                        theme: 'eclipse',
+                        lineNumbers: true,
+                        indentUnit: 4,
+                        lineWrapping: true,
+                        autofocus: false,
+                        extraKeys: {
+                            'Ctrl-Enter': () => this.runPythonCode(),
+                            'Cmd-Enter': () => this.runPythonCode()
+                        }
+                    });
+                    
+                    this.editor.setValue(`# EunPyeong Python Education - 파이썬 학습 환경
 # 이곳에서 자유롭게 파이썬 코드를 연습할 수 있습니다.
+# Ctrl+Enter 또는 Cmd+Enter로 코드를 실행할 수 있어요!
 
 name = input("이름을 입력하세요: ")
-print(f"안녕하세요, {name}님!")
+print(f"안녕하세요, {name}님! 파이썬 학습에 오신 것을 환영합니다!")
 
 # 반복문 예제
 for i in range(1, 4):
-    print(f"{i}번째 출력: Hello, Python!")`);
+    print(f"{i}번째 출력: Hello, Python!")
+    
+# 간단한 계산
+numbers = [1, 2, 3, 4, 5]
+total = sum(numbers)
+print(f"숫자들의 합: {total}")`);
+                }
             } catch (error) {
                 console.error("CodeMirror 초기화 실패:", error);
+                // CodeMirror 실패 시 기본 textarea로 대체
+                const container = document.getElementById('code-editor-container');
+                if (container) {
+                    container.innerHTML = `
+                        <textarea id="code-editor-fallback" 
+                                  class="w-full h-full p-3 bg-gray-50 border border-gray-300 rounded-md resize-none font-mono text-sm"
+                                  style="font-family: 'SchoolSafetyGoodSupport', 'Monaco', 'Consolas', monospace;"
+                                  spellcheck="false"
+                                  placeholder="# 파이썬 코드를 여기에 작성하세요..."></textarea>
+                    `;
+                    // textarea를 editor 객체로 설정
+                    const textarea = document.getElementById('code-editor-fallback');
+                    this.editor = {
+                        getValue: () => textarea.value,
+                        setValue: (value) => textarea.value = value
+                    };
+                    this.editor.setValue(`# EunPyeong Python Education - 파이썬 학습 환경
+name = input("이름을 입력하세요: ")
+print(f"안녕하세요, {name}님!")
+
+for i in range(1, 4):
+    print(f"{i}번째 출력: Hello, Python!")`);
+                }
             }
             
             document.getElementById('loader-overlay').style.display = 'none';

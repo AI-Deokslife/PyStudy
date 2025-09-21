@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시간 포맷 테스트</title>
+</head>
+<body>
+    <h1>시간 포맷팅 테스트</h1>
+    <div id="test-results"></div>
+
+    <script>
+        // 한국 시간으로 포맷팅하는 함수
+        function formatKoreanTime(dateString, includeSeconds = false) {
+            if (!dateString) return '-';
+            
+            const date = new Date(dateString);
+            const options = {
+                timeZone: 'Asia/Seoul',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                ...(includeSeconds && { second: '2-digit' })
+            };
+            
+            return date.toLocaleString('ko-KR', options);
+        }
+
+        // 시간만 표시하는 함수
+        function formatKoreanTimeOnly(dateString, includeSeconds = false) {
+            if (!dateString) return '-';
+            
+            const date = new Date(dateString);
+            const options = {
+                timeZone: 'Asia/Seoul',
+                hour: '2-digit',
+                minute: '2-digit',
+                ...(includeSeconds && { second: '2-digit' })
+            };
+            
+            return date.toLocaleTimeString('ko-KR', options);
+        }
+
+        // 테스트 실행
+        const now = new Date();
+        const utcTime = '2025-09-21T03:27:00.000Z';  // UTC 시간 (현재 서버 시간)
+        
+        const testResults = document.getElementById('test-results');
+        testResults.innerHTML = `
+            <h3>현재 시간 테스트</h3>
+            <p><strong>현재 브라우저 시간:</strong> ${now}</p>
+            <p><strong>UTC 시간:</strong> ${utcTime}</p>
+            <p><strong>formatKoreanTime(현재):</strong> ${formatKoreanTime(now.toISOString(), true)}</p>
+            <p><strong>formatKoreanTime(UTC):</strong> ${formatKoreanTime(utcTime, true)}</p>
+            <p><strong>formatKoreanTimeOnly(현재):</strong> ${formatKoreanTimeOnly(now.toISOString(), true)}</p>
+            <p><strong>formatKoreanTimeOnly(UTC):</strong> ${formatKoreanTimeOnly(utcTime, true)}</p>
+            
+            <h3>기존 방식과 비교</h3>
+            <p><strong>기존 toLocaleString:</strong> ${new Date(utcTime).toLocaleString('ko-KR')}</p>
+            <p><strong>기존 toLocaleTimeString:</strong> ${new Date(utcTime).toLocaleTimeString('ko-KR')}</p>
+            
+            <h3>시간대 정보</h3>
+            <p><strong>브라우저 시간대:</strong> ${Intl.DateTimeFormat().resolvedOptions().timeZone}</p>
+        `;
+    </script>
+</body>
+</html>

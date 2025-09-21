@@ -30,17 +30,23 @@ class StudentEnvironment {
         if (!dateString) return '-';
         
         const date = new Date(dateString);
-        const options = {
-            timeZone: 'Asia/Seoul',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            ...(includeSeconds && { second: '2-digit' })
-        };
         
-        return date.toLocaleString('ko-KR', options);
+        // UTC 시간에 9시간(KST 오프셋) 추가
+        const koreanTime = new Date(date.getTime() + (9 * 60 * 60 * 1000));
+        
+        const year = koreanTime.getUTCFullYear();
+        const month = String(koreanTime.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(koreanTime.getUTCDate()).padStart(2, '0');
+        const hours = String(koreanTime.getUTCHours()).padStart(2, '0');
+        const minutes = String(koreanTime.getUTCMinutes()).padStart(2, '0');
+        const seconds = String(koreanTime.getUTCSeconds()).padStart(2, '0');
+        
+        let timeStr = `${year}.${month}.${day} ${hours}:${minutes}`;
+        if (includeSeconds) {
+            timeStr += `:${seconds}`;
+        }
+        
+        return timeStr;
     }
     
     // 시간만 표시하는 함수
@@ -48,14 +54,20 @@ class StudentEnvironment {
         if (!dateString) return '-';
         
         const date = new Date(dateString);
-        const options = {
-            timeZone: 'Asia/Seoul',
-            hour: '2-digit',
-            minute: '2-digit',
-            ...(includeSeconds && { second: '2-digit' })
-        };
         
-        return date.toLocaleTimeString('ko-KR', options);
+        // UTC 시간에 9시간(KST 오프셋) 추가
+        const koreanTime = new Date(date.getTime() + (9 * 60 * 60 * 1000));
+        
+        const hours = String(koreanTime.getUTCHours()).padStart(2, '0');
+        const minutes = String(koreanTime.getUTCMinutes()).padStart(2, '0');
+        const seconds = String(koreanTime.getUTCSeconds()).padStart(2, '0');
+        
+        let timeStr = `${hours}:${minutes}`;
+        if (includeSeconds) {
+            timeStr += `:${seconds}`;
+        }
+        
+        return timeStr;
     }
     
     renderHeader() {

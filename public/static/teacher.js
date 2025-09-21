@@ -1017,19 +1017,174 @@ class TeacherDashboard {
         this.currentSessionId = null;
     }
     
-    showSessionHistory() {
+    async showSessionHistory() {
         this.stopPolling();
         
         const mainContent = document.getElementById('main-content');
         mainContent.innerHTML = `
             <div class="bg-gray-800 rounded-lg shadow-xl p-6">
-                <h2 class="text-2xl font-bold text-white mb-6">세션 기록</h2>
-                <div class="text-center py-8">
-                    <i class="fas fa-construction text-4xl text-gray-400"></i>
-                    <p class="text-gray-400 mt-4">세션 기록 기능은 개발 중입니다.</p>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <h2 class="text-2xl font-bold text-white">세션 기록</h2>
+                    <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        <select id="class-filter" class="bg-gray-700 border border-gray-600 text-white px-3 py-2 rounded">
+                            <option value="">전체 클래스</option>
+                        </select>
+                        <input type="date" id="date-filter" class="bg-gray-700 border border-gray-600 text-white px-3 py-2 rounded">
+                        <button onclick="teacherDashboard.filterSessionHistory()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white">
+                            <i class="fas fa-search mr-2"></i>필터
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="session-history-content">
+                    <div class="text-center py-8">
+                        <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
+                        <p class="text-gray-400 mt-4">세션 기록을 불러오는 중...</p>
+                    </div>
                 </div>
             </div>
         `;
+        
+        await this.loadSessionHistory();
+    }
+    
+    async loadSessionHistory() {
+        try {
+            const response = await fetch('/api/teacher/sessions/history', {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.renderSessionHistory(data.sessions);
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (error) {
+            document.getElementById('session-history-content').innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-exclamation-triangle text-3xl text-red-400"></i>
+                    <p class="text-red-400 mt-4">세션 기록을 불러오는데 실패했습니다.</p>
+                    <button onclick="teacherDashboard.loadSessionHistory()" class="mt-4 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white">
+                        다시 시도
+                    </button>
+                </div>
+            `;
+        }
+    }
+    
+    renderSessionHistory(sessions) {
+        const content = document.getElementById('session-history-content');
+        
+        if (!sessions || sessions.length === 0) {
+            content.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-history text-3xl text-gray-400"></i>
+                    <p class="text-gray-400 mt-4">아직 완료된 세션이 없습니다.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        content.innerHTML = `
+            <div class="space-y-4">
+                ${sessions.map(session => `
+                    <div class="bg-gray-700 p-4 rounded-lg border border-gray-600">
+                        <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+                            <div class="flex-1">
+                                <div class="flex items-center mb-2">
+                                    <h3 class="text-lg font-semibold text-white mr-3">${session.problem_title}</h3>
+                                    <span class="px-2 py-1 ${session.status === 'ended' ? 'bg-gray-600 text-gray-300' : 'bg-green-600 text-green-100'} text-xs rounded">
+                                        ${session.status === 'ended' ? '완료' : '진행중'}
+                                    </span>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-sm text-gray-300">
+                                    <div>
+                                        <i class="fas fa-calendar mr-2"></i>
+                                        시작: ${this.formatKoreanTime(session.start_time)}
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-clock mr-2"></i>
+                                        종료: ${session.end_time ? this.formatKoreanTime(session.end_time) : '진행중'}
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-users mr-2"></i>
+                                        참여: ${session.submission_count || 0}명
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-check-circle mr-2"></i>
+                                        정답률: ${session.success_rate ? Math.round(session.success_rate) : 0}%
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-sm text-gray-400">
+                                    <span class="mr-4">클래스: ${session.class_id}</span>
+                                    <span>총 제출: ${session.total_submissions || 0}회</span>
+                                </div>
+                            </div>
+                            <div class="flex flex-row lg:flex-col gap-2">
+                                <button onclick="teacherDashboard.viewSessionDetail(${session.id})" 
+                                        class="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-white text-sm flex-1 lg:flex-none">
+                                    <i class="fas fa-eye mr-2"></i>상세보기
+                                </button>
+                                ${session.status === 'ended' ? `
+                                    <button onclick="teacherDashboard.downloadSessionReport(${session.id})" 
+                                            class="bg-green-600 hover:bg-green-700 px-3 py-2 rounded text-white text-sm flex-1 lg:flex-none">
+                                        <i class="fas fa-download mr-2"></i>보고서
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+    
+    async viewSessionDetail(sessionId) {
+        // 세션 상세 보기 - 기존 loadSessionSubmissions 재사용
+        await this.loadSessionSubmissions(sessionId);
+        
+        // 상세 모드임을 표시
+        const mainContent = document.getElementById('main-content');
+        const header = mainContent.querySelector('h2');
+        if (header) {
+            header.innerHTML = `
+                <div class="flex items-center">
+                    <button onclick="teacherDashboard.showSessionHistory()" class="mr-4 text-gray-400 hover:text-white">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    세션 상세 정보
+                </div>
+            `;
+        }
+    }
+    
+    async downloadSessionReport(sessionId) {
+        try {
+            const response = await fetch(`/api/teacher/sessions/${sessionId}/submissions`, {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.exportToExcel(data.submissions, `세션_${sessionId}_보고서`);
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (error) {
+            alert('보고서 다운로드에 실패했습니다.');
+        }
+    }
+    
+    filterSessionHistory() {
+        // 필터 기능 구현 (추후 확장 가능)
+        this.loadSessionHistory();
     }
     
     showStudentProgress() {

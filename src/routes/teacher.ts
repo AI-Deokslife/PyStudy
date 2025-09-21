@@ -533,4 +533,51 @@ teacher.delete('/submissions/:submissionId', async (c) => {
   }
 });
 
+// 세션 기록 조회
+teacher.get('/sessions/history', async (c) => {
+  try {
+    const authHeader = c.req.header('Authorization');
+    const token = authHeader?.substring(7);
+    const payload = JSON.parse(atob(token!.split('.')[1]));
+
+    // 교사의 모든 세션 (진행중 + 완료) 조회
+    const sessions = await c.env.DB.prepare(`
+      SELECT 
+        ps.*,
+        p.title as problem_title,
+        p.difficulty,
+        COUNT(DISTINCT s.student_id) as submission_count,
+        COUNT(s.id) as total_submissions,
+        ROUND(
+          AVG(CASE WHEN s.status = 'success' THEN 1.0 ELSE 0.0 END) * 100, 1
+        ) as success_rate
+      FROM problem_sessions ps
+      LEFT JOIN problems p ON ps.problem_id = p.id
+      LEFT JOIN submissions s ON ps.id = s.session_id
+      WHERE ps.teacher_id = ?
+      GROUP BY ps.id
+      ORDER BY ps.start_time DESC
+    `).bind(payload.userId).all();
+
+    return c.json({
+      sessions: sessions.results.map((session: any) => ({
+        id: session.id,
+        problem_title: session.problem_title,
+        class_id: session.class_id,
+        status: session.status,
+        start_time: session.start_time,
+        end_time: session.end_time,
+        submission_count: session.submission_count || 0,
+        total_submissions: session.total_submissions || 0,
+        success_rate: session.success_rate || 0,
+        difficulty: session.difficulty
+      }))
+    });
+
+  } catch (error) {
+    console.error('Session history error:', error);
+    return c.json({ error: '세션 기록을 불러오는 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
 export default teacher;

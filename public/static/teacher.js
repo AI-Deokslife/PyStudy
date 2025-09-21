@@ -20,6 +20,39 @@ class TeacherDashboard {
         this.showProblemManagement();
     }
     
+    // 한국 시간으로 포맷팅하는 공통 함수
+    formatKoreanTime(dateString, includeSeconds = false) {
+        if (!dateString) return '-';
+        
+        const date = new Date(dateString);
+        const options = {
+            timeZone: 'Asia/Seoul',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            ...(includeSeconds && { second: '2-digit' })
+        };
+        
+        return date.toLocaleString('ko-KR', options);
+    }
+    
+    // 시간만 표시하는 함수
+    formatKoreanTimeOnly(dateString, includeSeconds = false) {
+        if (!dateString) return '-';
+        
+        const date = new Date(dateString);
+        const options = {
+            timeZone: 'Asia/Seoul',
+            hour: '2-digit',
+            minute: '2-digit',
+            ...(includeSeconds && { second: '2-digit' })
+        };
+        
+        return date.toLocaleTimeString('ko-KR', options);
+    }
+    
     renderHeader() {
         const app = document.getElementById('app');
         app.innerHTML = `
@@ -624,7 +657,7 @@ class TeacherDashboard {
                             출제자: ${session.teacher_name || '나'}
                         </p>
                         <p class="text-green-300 text-sm">
-                            시작 시간: ${new Date(session.start_time).toLocaleString('ko-KR')}
+                            시작 시간: ${this.formatKoreanTime(session.start_time)}
                         </p>
                         <p class="text-green-300 text-sm">
                             클래스: ${session.class_id}
@@ -731,7 +764,7 @@ class TeacherDashboard {
                                     ${this.getSubmissionStatusText(submission.status)}
                                 </span>
                                 <span class="ml-2 text-gray-400 text-sm">
-                                    ${new Date(submission.submitted_at).toLocaleTimeString('ko-KR')}
+                                    ${this.formatKoreanTimeOnly(submission.submitted_at)}
                                 </span>
                             </div>
                         </div>
@@ -788,7 +821,7 @@ class TeacherDashboard {
                 <div class="flex justify-between items-center p-6 border-b border-gray-700">
                     <div>
                         <h3 class="text-xl font-bold text-white">${submission.student_name} (${submission.student_username})</h3>
-                        <p class="text-gray-400 text-sm">제출 시간: ${new Date(submission.submitted_at).toLocaleString('ko-KR')}</p>
+                        <p class="text-gray-400 text-sm">제출 시간: ${this.formatKoreanTime(submission.submitted_at, true)}</p>
                     </div>
                     <div class="flex items-center space-x-3">
                         <span class="px-3 py-1 ${this.getSubmissionBadgeColor(submission.status)} text-sm rounded">
@@ -1208,7 +1241,7 @@ class TeacherDashboard {
                 sub.problem_title || '',
                 sub.session_title || '',
                 sub.class_id || '',
-                new Date(sub.submitted_at).toLocaleString('ko-KR'),
+                this.formatKoreanTime(sub.submitted_at, true),
                 sub.status || '',
                 sub.execution_time || '',
                 sub.code || '',
@@ -1390,8 +1423,8 @@ class TeacherDashboard {
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-gray-300">
                                 <p><strong>문제:</strong> ${request.problem_title}</p>
                                 <p><strong>학생:</strong> ${request.student_name} (@${request.student_username})</p>
-                                <p><strong>제출 시간:</strong> ${new Date(request.submitted_at).toLocaleString('ko-KR')}</p>
-                                <p><strong>요청 시간:</strong> ${new Date(request.request_date).toLocaleString('ko-KR')}</p>
+                                <p><strong>제출 시간:</strong> ${this.formatKoreanTime(request.submitted_at, true)}</p>
+                                <p><strong>요청 시간:</strong> ${this.formatKoreanTime(request.request_date, true)}</p>
                             </div>
                             
                             ${request.reason ? `

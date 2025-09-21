@@ -25,6 +25,39 @@ class StudentEnvironment {
         this.startSessionPolling();
     }
     
+    // 한국 시간으로 포맷팅하는 공통 함수
+    formatKoreanTime(dateString, includeSeconds = false) {
+        if (!dateString) return '-';
+        
+        const date = new Date(dateString);
+        const options = {
+            timeZone: 'Asia/Seoul',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            ...(includeSeconds && { second: '2-digit' })
+        };
+        
+        return date.toLocaleString('ko-KR', options);
+    }
+    
+    // 시간만 표시하는 함수
+    formatKoreanTimeOnly(dateString, includeSeconds = false) {
+        if (!dateString) return '-';
+        
+        const date = new Date(dateString);
+        const options = {
+            timeZone: 'Asia/Seoul',
+            hour: '2-digit',
+            minute: '2-digit',
+            ...(includeSeconds && { second: '2-digit' })
+        };
+        
+        return date.toLocaleTimeString('ko-KR', options);
+    }
+    
     renderHeader() {
         const app = document.getElementById('app');
         app.innerHTML = `
@@ -641,7 +674,7 @@ for i in range(1, 4):
                                                 ${this.getSubmissionStatusText(sub.status)}
                                             </span>
                                             <span class="text-gray-400">
-                                                ${new Date(sub.submitted_at).toLocaleTimeString('ko-KR')}
+                                                ${this.formatKoreanTimeOnly(sub.submitted_at)}
                                             </span>
                                         </div>
                                         ${sub.output ? `<p class="text-gray-300 text-xs mt-1">출력: ${sub.output}</p>` : ''}
@@ -870,7 +903,7 @@ for i in range(1, 4):
                                         <i class="fas fa-trash-alt mr-1"></i>삭제 요청
                                     </button>
                                     <p class="text-gray-400 text-xs">
-                                        ${new Date(submission.submitted_at).toLocaleString('ko-KR')}
+                                        ${this.formatKoreanTime(submission.submitted_at, true)}
                                     </p>
                                 </div>
                             </div>

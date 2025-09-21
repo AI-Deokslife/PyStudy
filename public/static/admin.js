@@ -19,6 +19,38 @@ class AdminDashboard {
         this.showUserManagement();
     }
     
+    // 한국 시간으로 포맷팅하는 공통 함수
+    formatKoreanDate(dateString) {
+        if (!dateString) return '-';
+        
+        const date = new Date(dateString);
+        const options = {
+            timeZone: 'Asia/Seoul',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        };
+        
+        return date.toLocaleDateString('ko-KR', options);
+    }
+    
+    formatKoreanTime(dateString, includeSeconds = false) {
+        if (!dateString) return '-';
+        
+        const date = new Date(dateString);
+        const options = {
+            timeZone: 'Asia/Seoul',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            ...(includeSeconds && { second: '2-digit' })
+        };
+        
+        return date.toLocaleString('ko-KR', options);
+    }
+    
     renderHeader() {
         const app = document.getElementById('app');
         app.innerHTML = `
@@ -249,7 +281,7 @@ class AdminDashboard {
                                     </span>
                                 </td>
                                 <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-300">${user.class_id || '-'}</td>
-                                <td class="hidden xl:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-300">${new Date(user.created_at).toLocaleDateString('ko-KR')}</td>
+                                <td class="hidden xl:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-300">${this.formatKoreanDate(user.created_at)}</td>
                                 <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                                     <div class="flex space-x-2">
                                         <button onclick="adminDashboard.showEditUserForm(${user.id})" 
@@ -305,7 +337,7 @@ class AdminDashboard {
                             </div>` : ''}
                             <div class="flex items-center text-gray-300">
                                 <i class="fas fa-calendar mr-2 w-4"></i>
-                                <span>가입일: ${new Date(user.created_at).toLocaleDateString('ko-KR')}</span>
+                                <span>가입일: ${this.formatKoreanDate(user.created_at)}</span>
                             </div>
                         </div>
                     </div>

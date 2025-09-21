@@ -3,15 +3,41 @@ import { CloudflareBindings, CreateProblemRequest, CreateSessionRequest } from '
 
 const teacher = new Hono<{ Bindings: CloudflareBindings }>();
 
+// 공통 인증 함수
+function verifyAuth(c: any) {
+  const authHeader = c.req.header('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return { error: '인증 토큰이 없습니다.', status: 401 };
+  }
+  
+  const token = authHeader.substring(7);
+  if (!token || token.split('.').length !== 3) {
+    return { error: '유효하지 않은 토큰 형식입니다.', status: 401 };
+  }
+  
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (!payload.userId) {
+      return { error: '유효하지 않은 사용자 정보입니다.', status: 401 };
+    }
+    return { payload, token };
+  } catch (error) {
+    return { error: '토큰 파싱 오류입니다.', status: 401 };
+  }
+}
+
 // 문제 생성
 teacher.post('/problems', async (c) => {
   try {
     const problemData: CreateProblemRequest = await c.req.json();
     
-    // 사용자 정보 가져오기 (간단한 토큰 파싱)
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    // 사용자 인증 확인
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
     
     const { title, description, initial_code, expected_output, test_cases, time_limit, memory_limit, difficulty } = problemData;
 
@@ -50,9 +76,12 @@ teacher.post('/problems', async (c) => {
 // 내가 만든 문제 목록 조회
 teacher.get('/problems', async (c) => {
   try {
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
 
     const problems = await c.env.DB.prepare(`
       SELECT id, title, description, difficulty, time_limit, created_at
@@ -71,10 +100,12 @@ teacher.get('/problems', async (c) => {
 // 교사의 클래스 목록 조회
 teacher.get('/classes', async (c) => {
   try {
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
-
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
     console.log('Teacher classes request - userId:', payload.userId);
 
     const classes = await c.env.DB.prepare(`
@@ -99,9 +130,12 @@ teacher.get('/classes', async (c) => {
 // 클래스 생성
 teacher.post('/classes', async (c) => {
   try {
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
 
     const { id, name, description } = await c.req.json();
 
@@ -138,9 +172,13 @@ teacher.post('/classes', async (c) => {
 teacher.put('/classes/:id', async (c) => {
   try {
     const classId = c.req.param('id');
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
 
     const { name, description } = await c.req.json();
 
@@ -175,9 +213,13 @@ teacher.put('/classes/:id', async (c) => {
 teacher.delete('/classes/:id', async (c) => {
   try {
     const classId = c.req.param('id');
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
 
     // 클래스 소유자 확인
     const existing = await c.env.DB.prepare(
@@ -214,9 +256,13 @@ teacher.delete('/classes/:id', async (c) => {
 teacher.get('/classes/:id', async (c) => {
   try {
     const classId = c.req.param('id');
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
 
     // 클래스 소유자 확인 및 정보 조회
     const classInfo = await c.env.DB.prepare(
@@ -239,9 +285,13 @@ teacher.get('/classes/:id', async (c) => {
 teacher.get('/classes/:id/members', async (c) => {
   try {
     const classId = c.req.param('id');
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
 
     // 클래스 소유자 확인
     const classInfo = await c.env.DB.prepare(
@@ -275,9 +325,13 @@ teacher.get('/classes/:id/members', async (c) => {
 teacher.post('/classes/:id/members', async (c) => {
   try {
     const classId = c.req.param('id');
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
 
     const { studentIds } = await c.req.json();
 
@@ -323,9 +377,13 @@ teacher.delete('/classes/:id/members/:studentId', async (c) => {
   try {
     const classId = c.req.param('id');
     const studentId = c.req.param('studentId');
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
 
     // 클래스 소유자 확인
     const classInfo = await c.env.DB.prepare(
@@ -355,9 +413,12 @@ teacher.delete('/classes/:id/members/:studentId', async (c) => {
 // 전체 학생 목록 조회 (클래스 멤버 관리용)
 teacher.get('/students', async (c) => {
   try {
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
 
     const students = await c.env.DB.prepare(`
       SELECT id, username, full_name, email, created_at
@@ -374,13 +435,59 @@ teacher.get('/students', async (c) => {
   }
 });
 
+// 특정 클래스에 속하지 않은 학생 목록 조회 (클래스 멤버 추가용)
+teacher.get('/classes/:id/available-students', async (c) => {
+  try {
+    const classId = c.req.param('id');
+    
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
+
+    // 클래스 소유자 확인
+    const classInfo = await c.env.DB.prepare(
+      'SELECT id FROM classes WHERE id = ? AND teacher_id = ?'
+    ).bind(classId, payload.userId).first();
+
+    if (!classInfo) {
+      return c.json({ error: '클래스를 찾을 수 없거나 접근 권한이 없습니다.' }, 404);
+    }
+
+    // 해당 클래스에 속하지 않은 학생들만 조회
+    const students = await c.env.DB.prepare(`
+      SELECT u.id, u.username, u.full_name, u.email, u.created_at
+      FROM users u
+      WHERE u.role = 'student'
+        AND u.id NOT IN (
+          SELECT cm.student_id 
+          FROM class_members cm 
+          WHERE cm.class_id = ?
+        )
+      ORDER BY u.full_name, u.username
+    `).bind(classId).all();
+
+    return c.json({ students: students.results });
+
+  } catch (error) {
+    console.error('Get available students error:', error);
+    return c.json({ error: '사용 가능한 학생 목록 조회 중 오류가 발생했습니다.' }, 500);
+  }
+});
+
 // 개별 문제 조회 (편집용)
 teacher.get('/problems/:id', async (c) => {
   try {
     const problemId = c.req.param('id');
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
 
     const problem = await c.env.DB.prepare(`
       SELECT id, title, description, initial_code, expected_output, test_cases, 
@@ -419,9 +526,12 @@ teacher.put('/problems/:id', async (c) => {
     const problemId = c.req.param('id');
     const problemData: CreateProblemRequest = await c.req.json();
     
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
     
     const { title, description, initial_code, expected_output, test_cases, time_limit, memory_limit, difficulty } = problemData;
 
@@ -480,9 +590,13 @@ teacher.put('/problems/:id', async (c) => {
 teacher.delete('/problems/:id', async (c) => {
   try {
     const problemId = c.req.param('id');
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
 
     // 문제 존재 및 권한 확인
     const existingProblem = await c.env.DB.prepare(`
@@ -543,9 +657,12 @@ teacher.post('/sessions', async (c) => {
   try {
     const sessionData: CreateSessionRequest = await c.req.json();
     
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
     
     const { problem_id, class_id, title } = sessionData;
 
@@ -588,9 +705,12 @@ teacher.post('/sessions', async (c) => {
 // 활성 세션 조회
 teacher.get('/sessions/active', async (c) => {
   try {
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
 
     const sessions = await c.env.DB.prepare(`
       SELECT ps.*, p.title as problem_title, p.description as problem_description,
@@ -614,9 +734,12 @@ teacher.post('/sessions/:id/end', async (c) => {
   try {
     const sessionId = c.req.param('id');
     
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
 
     const result = await c.env.DB.prepare(`
       UPDATE problem_sessions 
@@ -658,9 +781,12 @@ teacher.get('/sessions/:id/submissions', async (c) => {
 // 선택한 제출들 삭제
 teacher.delete('/submissions/delete', async (c) => {
   try {
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
 
     const { submissionIds } = await c.req.json();
 
@@ -703,9 +829,13 @@ teacher.delete('/submissions/delete', async (c) => {
 teacher.delete('/sessions/:sessionId/submissions', async (c) => {
   try {
     const sessionId = c.req.param('sessionId');
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
 
     // 세션 소유자 확인
     const session = await c.env.DB.prepare(
@@ -735,9 +865,12 @@ teacher.delete('/sessions/:sessionId/submissions', async (c) => {
 // 선택한 제출들 다운로드 (CSV 형태)
 teacher.post('/submissions/download', async (c) => {
   try {
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
 
     const { submissionIds } = await c.req.json();
 
@@ -789,9 +922,13 @@ teacher.post('/submissions/download', async (c) => {
 teacher.get('/sessions/:sessionId/submissions/download', async (c) => {
   try {
     const sessionId = c.req.param('sessionId');
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
 
     // 세션 소유자 확인 및 제출 데이터 조회
     const submissions = await c.env.DB.prepare(`
@@ -1006,9 +1143,12 @@ teacher.delete('/submissions/:submissionId', async (c) => {
 // 세션 기록 조회
 teacher.get('/sessions/history', async (c) => {
   try {
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
 
     // 교사의 모든 세션 (진행중 + 완료) 조회
     const sessions = await c.env.DB.prepare(`
@@ -1053,9 +1193,12 @@ teacher.get('/sessions/history', async (c) => {
 // 교사 비밀번호 변경
 teacher.put('/change-password', async (c) => {
   try {
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
 
     const { currentPassword, newPassword, confirmPassword } = await c.req.json();
 
@@ -1120,9 +1263,12 @@ teacher.put('/change-password', async (c) => {
 // 프로필 업데이트
 teacher.put('/profile', async (c) => {
   try {
-    const authHeader = c.req.header('Authorization');
-    const token = authHeader?.substring(7);
-    const payload = JSON.parse(atob(token!.split('.')[1]));
+    const auth = verifyAuth(c);
+    if ('error' in auth) {
+      return c.json({ error: auth.error }, auth.status);
+    }
+    
+    const { payload } = auth;
 
     const { full_name, email } = await c.req.json();
 

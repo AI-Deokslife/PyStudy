@@ -2591,9 +2591,9 @@ class TeacherDashboard {
     }
     
     async showAddStudentModal(classId) {
-        // 전체 학생 목록 로드
+        // 해당 클래스에 속하지 않은 학생 목록 로드
         try {
-            const response = await fetch('/api/teacher/students', {
+            const response = await fetch(`/api/teacher/classes/${classId}/available-students`, {
                 headers: {
                     'Authorization': `Bearer ${this.token}`
                 }
@@ -2631,7 +2631,13 @@ class TeacherDashboard {
                 
                 <form id="add-students-form">
                     <div class="space-y-2 max-h-60 overflow-y-auto mb-4" id="students-list">
-                        ${students.map(student => `
+                        ${students.length === 0 ? `
+                            <div class="text-center py-8">
+                                <i class="fas fa-users text-4xl text-emerald-400 mb-4"></i>
+                                <p class="text-gray-300 mb-2">추가할 수 있는 학생이 없습니다</p>
+                                <p class="text-gray-500 text-sm">모든 학생이 이미 이 클래스에 속해있습니다.</p>
+                            </div>
+                        ` : students.map(student => `
                             <label class="flex items-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 cursor-pointer">
                                 <input type="checkbox" value="${student.id}" class="mr-3">
                                 <div>
@@ -2645,10 +2651,12 @@ class TeacherDashboard {
                     <div class="flex justify-end gap-3">
                         <button type="button" onclick="this.closest('.fixed').remove()" 
                                 class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md">취소</button>
-                        <button type="submit" 
-                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">
-                            <i class="fas fa-user-plus mr-2"></i>선택한 학생 추가
-                        </button>
+                        ${students.length > 0 ? `
+                            <button type="submit" 
+                                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">
+                                <i class="fas fa-user-plus mr-2"></i>선택한 학생 추가
+                            </button>
+                        ` : ''}
                     </div>
                 </form>
             </div>
